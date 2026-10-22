@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "referenceTime": "2026-10-22T03:00:00Z",
+  "categories": [
+    {
+      "id": "audio",
+      "name": "디지털 · 음향"
+    },
+    {
+      "id": "laptop",
+      "name": "컴퓨터 · 노트북"
+    },
+    {
+      "id": "wearable",
+      "name": "웨어러블"
+    }
+  ],
+  "products": [
+    {
+      "basePrice": 384900,
+      "imageUrl": "",
+      "scenario": "normal",
+      "optionKey": "black-new",
+      "description": "블랙 · 새상품 · 더미 상품",
+      "historyDays": 30,
+      "id": "sony-xm5-black",
+      "title": "소니 WH-1000XM5 무선 헤드폰",
+      "categoryId": "audio"
+    },
+    {
+      "basePrice": 1438000,
+      "imageUrl": "",
+      "scenario": "insufficient",
+      "optionKey": "16gb-256gb-new",
+      "description": "16GB / 256GB · 새상품 · 더미 상품",
+      "historyDays": 3,
+      "id": "macbook-m3-16",
+      "title": "맥북 에어 M3 13인치 16GB",
+      "categoryId": "laptop"
+    },
+    {
+      "basePrice": 548700,
+      "imageUrl": "",
+      "scenario": "normal",
+      "optionKey": "gps-42mm-new",
+      "description": "GPS 42mm · 새상품 · 더미 상품",
+      "historyDays": 30,
+      "id": "watch-10-42",
+      "title": "애플워치 시리즈 10 GPS 42mm",
+      "categoryId": "wearable"
+    },
+    {
+      "basePrice": 200000,
+      "imageUrl": "",
+      "scenario": "sold-out",
+      "optionKey": "demo-new",
+      "description": "판매처 전체 품절 예시",
+      "historyDays": 10,
+      "id": "sold-out-demo",
+      "title": "품절 시나리오 헤드폰",
+      "categoryId": "audio"
+    }
+  ]
+}

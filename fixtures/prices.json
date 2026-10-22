@@ -1,0 +1,693 @@
+{
+  "dailyPrices": [
+    {
+      "date": "2026-10-22",
+      "comparablePrice": 384900,
+      "id": "sony-xm5-black-2026-10-22",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-21",
+      "comparablePrice": 385900,
+      "id": "sony-xm5-black-2026-10-21",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-20",
+      "comparablePrice": 386900,
+      "id": "sony-xm5-black-2026-10-20",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-19",
+      "comparablePrice": 387900,
+      "id": "sony-xm5-black-2026-10-19",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-18",
+      "comparablePrice": 388900,
+      "id": "sony-xm5-black-2026-10-18",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-17",
+      "comparablePrice": 389900,
+      "id": "sony-xm5-black-2026-10-17",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-16",
+      "comparablePrice": 390900,
+      "id": "sony-xm5-black-2026-10-16",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-15",
+      "comparablePrice": 391900,
+      "id": "sony-xm5-black-2026-10-15",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-14",
+      "comparablePrice": 392900,
+      "id": "sony-xm5-black-2026-10-14",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-13",
+      "comparablePrice": 393900,
+      "id": "sony-xm5-black-2026-10-13",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-12",
+      "comparablePrice": 394900,
+      "id": "sony-xm5-black-2026-10-12",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-11",
+      "comparablePrice": 395900,
+      "id": "sony-xm5-black-2026-10-11",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-10",
+      "comparablePrice": 396900,
+      "id": "sony-xm5-black-2026-10-10",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-09",
+      "comparablePrice": 397900,
+      "id": "sony-xm5-black-2026-10-09",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-08",
+      "comparablePrice": 398900,
+      "id": "sony-xm5-black-2026-10-08",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-07",
+      "comparablePrice": 399900,
+      "id": "sony-xm5-black-2026-10-07",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-06",
+      "comparablePrice": 400900,
+      "id": "sony-xm5-black-2026-10-06",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-05",
+      "comparablePrice": 401900,
+      "id": "sony-xm5-black-2026-10-05",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-04",
+      "comparablePrice": 402900,
+      "id": "sony-xm5-black-2026-10-04",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-03",
+      "comparablePrice": 403900,
+      "id": "sony-xm5-black-2026-10-03",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-02",
+      "comparablePrice": 404900,
+      "id": "sony-xm5-black-2026-10-02",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-01",
+      "comparablePrice": 405900,
+      "id": "sony-xm5-black-2026-10-01",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-30",
+      "comparablePrice": 406900,
+      "id": "sony-xm5-black-2026-09-30",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-29",
+      "comparablePrice": 407900,
+      "id": "sony-xm5-black-2026-09-29",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-28",
+      "comparablePrice": 408900,
+      "id": "sony-xm5-black-2026-09-28",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-27",
+      "comparablePrice": 409900,
+      "id": "sony-xm5-black-2026-09-27",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-26",
+      "comparablePrice": 410900,
+      "id": "sony-xm5-black-2026-09-26",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-25",
+      "comparablePrice": 411900,
+      "id": "sony-xm5-black-2026-09-25",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-24",
+      "comparablePrice": 412900,
+      "id": "sony-xm5-black-2026-09-24",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-23",
+      "comparablePrice": 413900,
+      "id": "sony-xm5-black-2026-09-23",
+      "productId": "sony-xm5-black",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-22",
+      "comparablePrice": 1438000,
+      "id": "macbook-m3-16-2026-10-22",
+      "productId": "macbook-m3-16",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-21",
+      "comparablePrice": 1439000,
+      "id": "macbook-m3-16-2026-10-21",
+      "productId": "macbook-m3-16",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-20",
+      "comparablePrice": 1440000,
+      "id": "macbook-m3-16-2026-10-20",
+      "productId": "macbook-m3-16",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-22",
+      "comparablePrice": 548700,
+      "id": "watch-10-42-2026-10-22",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-21",
+      "comparablePrice": 549700,
+      "id": "watch-10-42-2026-10-21",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-20",
+      "comparablePrice": 550700,
+      "id": "watch-10-42-2026-10-20",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-19",
+      "comparablePrice": 551700,
+      "id": "watch-10-42-2026-10-19",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-18",
+      "comparablePrice": 552700,
+      "id": "watch-10-42-2026-10-18",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-17",
+      "comparablePrice": 553700,
+      "id": "watch-10-42-2026-10-17",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-16",
+      "comparablePrice": 554700,
+      "id": "watch-10-42-2026-10-16",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-15",
+      "comparablePrice": 555700,
+      "id": "watch-10-42-2026-10-15",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-14",
+      "comparablePrice": 556700,
+      "id": "watch-10-42-2026-10-14",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-13",
+      "comparablePrice": 557700,
+      "id": "watch-10-42-2026-10-13",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-12",
+      "comparablePrice": 558700,
+      "id": "watch-10-42-2026-10-12",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-11",
+      "comparablePrice": 559700,
+      "id": "watch-10-42-2026-10-11",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-10",
+      "comparablePrice": 560700,
+      "id": "watch-10-42-2026-10-10",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-09",
+      "comparablePrice": 561700,
+      "id": "watch-10-42-2026-10-09",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-08",
+      "comparablePrice": 562700,
+      "id": "watch-10-42-2026-10-08",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-07",
+      "comparablePrice": 563700,
+      "id": "watch-10-42-2026-10-07",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-06",
+      "comparablePrice": 564700,
+      "id": "watch-10-42-2026-10-06",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-05",
+      "comparablePrice": 565700,
+      "id": "watch-10-42-2026-10-05",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-04",
+      "comparablePrice": 566700,
+      "id": "watch-10-42-2026-10-04",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-03",
+      "comparablePrice": 567700,
+      "id": "watch-10-42-2026-10-03",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-02",
+      "comparablePrice": 568700,
+      "id": "watch-10-42-2026-10-02",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-01",
+      "comparablePrice": 569700,
+      "id": "watch-10-42-2026-10-01",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-30",
+      "comparablePrice": 570700,
+      "id": "watch-10-42-2026-09-30",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-29",
+      "comparablePrice": 571700,
+      "id": "watch-10-42-2026-09-29",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-28",
+      "comparablePrice": 572700,
+      "id": "watch-10-42-2026-09-28",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-27",
+      "comparablePrice": 573700,
+      "id": "watch-10-42-2026-09-27",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-26",
+      "comparablePrice": 574700,
+      "id": "watch-10-42-2026-09-26",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-25",
+      "comparablePrice": 575700,
+      "id": "watch-10-42-2026-09-25",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-24",
+      "comparablePrice": 576700,
+      "id": "watch-10-42-2026-09-24",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-09-23",
+      "comparablePrice": 577700,
+      "id": "watch-10-42-2026-09-23",
+      "productId": "watch-10-42",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-22",
+      "comparablePrice": 200000,
+      "id": "sold-out-demo-2026-10-22",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-21",
+      "comparablePrice": 201000,
+      "id": "sold-out-demo-2026-10-21",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-20",
+      "comparablePrice": 202000,
+      "id": "sold-out-demo-2026-10-20",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-19",
+      "comparablePrice": 203000,
+      "id": "sold-out-demo-2026-10-19",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-18",
+      "comparablePrice": 204000,
+      "id": "sold-out-demo-2026-10-18",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-17",
+      "comparablePrice": 205000,
+      "id": "sold-out-demo-2026-10-17",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-16",
+      "comparablePrice": 206000,
+      "id": "sold-out-demo-2026-10-16",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-15",
+      "comparablePrice": 207000,
+      "id": "sold-out-demo-2026-10-15",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-14",
+      "comparablePrice": 208000,
+      "id": "sold-out-demo-2026-10-14",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    },
+    {
+      "date": "2026-10-13",
+      "comparablePrice": 209000,
+      "id": "sold-out-demo-2026-10-13",
+      "productId": "sold-out-demo",
+      "validSamples": 1
+    }
+  ],
+  "offers": [
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "쿠팡 (더미)",
+      "shippingFee": 0,
+      "unconditionalDiscount": 0,
+      "id": "sony-xm5-black-a",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 384900,
+      "purchaseUrl": null,
+      "productId": "sony-xm5-black"
+    },
+    {
+      "conditionalBenefits": [
+        {
+          "label": "카드 할인 예시",
+          "amount": 10000
+        }
+      ],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "11번가 (더미)",
+      "shippingFee": 3000,
+      "unconditionalDiscount": 0,
+      "id": "sony-xm5-black-b",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 389900,
+      "purchaseUrl": null,
+      "productId": "sony-xm5-black"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "G마켓 (더미)",
+      "shippingFee": null,
+      "unconditionalDiscount": 0,
+      "id": "sony-xm5-black-c",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 382900,
+      "purchaseUrl": null,
+      "productId": "sony-xm5-black"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "쿠팡 (더미)",
+      "shippingFee": 0,
+      "unconditionalDiscount": 0,
+      "id": "macbook-m3-16-a",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 1438000,
+      "purchaseUrl": null,
+      "productId": "macbook-m3-16"
+    },
+    {
+      "conditionalBenefits": [
+        {
+          "label": "카드 할인 예시",
+          "amount": 10000
+        }
+      ],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "11번가 (더미)",
+      "shippingFee": 3000,
+      "unconditionalDiscount": 0,
+      "id": "macbook-m3-16-b",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 1443000,
+      "purchaseUrl": null,
+      "productId": "macbook-m3-16"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "G마켓 (더미)",
+      "shippingFee": null,
+      "unconditionalDiscount": 0,
+      "id": "macbook-m3-16-c",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 1436000,
+      "purchaseUrl": null,
+      "productId": "macbook-m3-16"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "쿠팡 (더미)",
+      "shippingFee": 0,
+      "unconditionalDiscount": 0,
+      "id": "watch-10-42-a",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 548700,
+      "purchaseUrl": null,
+      "productId": "watch-10-42"
+    },
+    {
+      "conditionalBenefits": [
+        {
+          "label": "카드 할인 예시",
+          "amount": 10000
+        }
+      ],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "11번가 (더미)",
+      "shippingFee": 3000,
+      "unconditionalDiscount": 0,
+      "id": "watch-10-42-b",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 553700,
+      "purchaseUrl": null,
+      "productId": "watch-10-42"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "IN_STOCK",
+      "store": "G마켓 (더미)",
+      "shippingFee": null,
+      "unconditionalDiscount": 0,
+      "id": "watch-10-42-c",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 546700,
+      "purchaseUrl": null,
+      "productId": "watch-10-42"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "OUT_OF_STOCK",
+      "store": "쿠팡 (더미)",
+      "shippingFee": 0,
+      "unconditionalDiscount": 0,
+      "id": "sold-out-demo-a",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 200000,
+      "purchaseUrl": null,
+      "productId": "sold-out-demo"
+    },
+    {
+      "conditionalBenefits": [
+        {
+          "label": "카드 할인 예시",
+          "amount": 10000
+        }
+      ],
+      "currency": "KRW",
+      "availability": "OUT_OF_STOCK",
+      "store": "11번가 (더미)",
+      "shippingFee": 3000,
+      "unconditionalDiscount": 0,
+      "id": "sold-out-demo-b",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 205000,
+      "purchaseUrl": null,
+      "productId": "sold-out-demo"
+    },
+    {
+      "conditionalBenefits": [],
+      "currency": "KRW",
+      "availability": "OUT_OF_STOCK",
+      "store": "G마켓 (더미)",
+      "shippingFee": null,
+      "unconditionalDiscount": 0,
+      "id": "sold-out-demo-c",
+      "observedAt": "2026-10-22T03:00:00Z",
+      "productPrice": 198000,
+      "purchaseUrl": null,
+      "productId": "sold-out-demo"
+    }
+  ]
+}

@@ -1,0 +1,391 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "PRIZM local fixture collector",
+    "version": "0.4.0",
+    "description": "더미 재확인과 선택적 다나와 실제 읽기. 다나와는 별도 내부 경로에서만 명시적으로 호출하며 저장하지 않는다."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4001"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "로컬 상태",
+        "responses": {
+          "200": {
+            "description": "UP/fixture"
+          }
+        }
+      }
+    },
+    "/internal/collect": {
+      "post": {
+        "summary": "더미 검색 결과와 원본 파일 버전 재확인",
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "q",
+                  "categoryId",
+                  "scenario",
+                  "referenceTime",
+                  "dataVersion"
+                ],
+                "properties": {
+                  "q": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{0,128}$"
+                  },
+                  "scenario": {
+                    "enum": [
+                      "normal",
+                      "empty",
+                      "error",
+                      "rate-limit",
+                      "unsupported"
+                    ]
+                  },
+                  "referenceTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "maxLength": 40
+                  },
+                  "dataVersion": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "스냅샷 일치. READ_ONLY 결과",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "source",
+                    "synthetic",
+                    "mode",
+                    "referenceTime",
+                    "dataVersion",
+                    "productIds"
+                  ],
+                  "properties": {
+                    "source": {
+                      "const": "fixture"
+                    },
+                    "synthetic": {
+                      "const": true
+                    },
+                    "mode": {
+                      "const": "READ_ONLY"
+                    },
+                    "referenceTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dataVersion": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    },
+                    "productIds": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/internal/danawa/search": {
+      "post": {
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "description": "source=reef-danawa, synthetic=false, fetchedAt nullable, receivedAt, localCacheHit, upstreamCacheHit, page, hasMore, productId, items/product/offers. 재고 UNKNOWN, 불명확한 배송비/합계 null."
+          }
+        },
+        "summary": "선택적 Reef 다나와 search",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "query": {
+                    "minLength": 1,
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "page": {
+                    "maximum": 50,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "type": "object",
+                "required": "query"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ]
+      }
+    },
+    "/internal/danawa/product": {
+      "post": {
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "description": "source=reef-danawa, synthetic=false, fetchedAt nullable, receivedAt, localCacheHit, upstreamCacheHit, page, hasMore, productId, items/product/offers. 재고 UNKNOWN, 불명확한 배송비/합계 null."
+          }
+        },
+        "summary": "선택적 Reef 다나와 product",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "productId": {
+                    "pattern": "^[0-9]{1,30}$",
+                    "type": "string"
+                  },
+                  "page": {
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "type": "object",
+                "required": "productId"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ]
+      }
+    },
+    "/internal/danawa/offers": {
+      "post": {
+        "responses": {
+          "default": {
+            "$ref": "#/components/responses/Error"
+          },
+          "200": {
+            "description": "source=reef-danawa, synthetic=false, fetchedAt nullable, receivedAt, localCacheHit, upstreamCacheHit, page, hasMore, productId, items/product/offers. 재고 UNKNOWN, 불명확한 배송비/합계 null."
+          }
+        },
+        "summary": "선택적 Reef 다나와 offers",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "productId": {
+                    "pattern": "^[0-9]{1,30}$",
+                    "type": "string"
+                  },
+                  "page": {
+                    "maximum": 20,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "type": "object",
+                "required": "productId"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ]
+      }
+    },
+    "/internal/danawa/metrics": {
+      "get": {
+        "responses": {
+          "403": {
+            "description": "내부 인증 실패"
+          },
+          "200": {
+            "description": "요청/캐시/실제 외부 시도/성공/실패/유형별 횟수, 최근 200개 p95. 실제 과금 크레딧은 null."
+          }
+        },
+        "summary": "현재 수집기 프로세스의 실제 요청 지표",
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ]
+      }
+    },
+    "/internal/danawa/price_history": {
+      "post": {
+        "summary": "Reef 다나와 주간·월간 최저가 이력",
+        "security": [
+          {
+            "InternalKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,30}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "공통 실제 데이터 envelope + priceHistory: productId, currency, weekly/monthly [{date,lowestPrice}]"
+          },
+          "400": {
+            "description": "잘못된 입력"
+          },
+          "429": {
+            "description": "요청 한도"
+          },
+          "502": {
+            "description": "잘못된 원본 형식"
+          },
+          "503": {
+            "description": "외부 수집 실패"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "InternalKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Internal-Key"
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "잘못된 입력·인증·경로·버전 불일치·본문 4096바이트 초과·미지원·한도·장애",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "error"
+              ],
+              "properties": {
+                "error": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "message",
+                    "requestId",
+                    "retryable"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "retryable": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

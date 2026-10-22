@@ -1,0 +1,64 @@
+{
+  "indexes": [
+    {
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "arrayConfig": "CONTAINS",
+          "fieldPath": "categoryIds"
+        },
+        {
+          "order": "DESCENDING",
+          "fieldPath": "updatedAtMillis"
+        }
+      ],
+      "collectionGroup": "liveDanawaCatalog"
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "alerts",
+      "fieldPath": "enabled",
+      "indexes": [
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION_GROUP"
+        },
+        {
+          "order": "ASCENDING",
+          "queryScope": "COLLECTION"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "fixturePriceSnapshots",
+      "fieldPath": "content",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "danawaObservations",
+      "fieldPath": "offers",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "danawaDailyQuotes",
+      "fieldPath": "samples",
+      "indexes": []
+    },
+    {
+      "indexes": [],
+      "collectionGroup": "liveDisplayCache",
+      "fieldPath": "payloadJson"
+    },
+    {
+      "indexes": [],
+      "collectionGroup": "liveDisplayCache",
+      "fieldPath": "inputJson"
+    },
+    {
+      "indexes": [],
+      "collectionGroup": "liveDanawaCatalog",
+      "fieldPath": "summaryJson"
+    }
+  ]
+}

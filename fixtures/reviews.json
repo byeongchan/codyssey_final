@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-22T03:00:00Z",
+  "products": [
+    {"productId":"sony-xm5-black","supported":true,"reviews":[
+      {"id":"sony-demo-1","rating":5,"text":"[합성 리뷰] 소음 차단과 가벼운 착용감이 마음에 들었습니다.","pros":["소음 차단","착용감"],"cons":[]},
+      {"id":"sony-demo-2","rating":4,"text":"[합성 리뷰] 소음 차단은 좋지만 가격 부담이 있습니다.","pros":["소음 차단"],"cons":["가격 부담"]},
+      {"id":"sony-demo-3","rating":3,"text":"[합성 리뷰] 착용감은 좋지만 휴대할 때 부피가 아쉽습니다.","pros":["착용감"],"cons":["휴대 부피"]},
+      {"id":"sony-demo-4","rating":2,"text":"[합성 리뷰] 휴대 부피와 가격 부담이 아쉬웠습니다.","pros":[],"cons":["휴대 부피","가격 부담"]}
+    ]},
+    {"productId":"macbook-m3-16","supported":true,"reviews":[
+      {"id":"mac-demo-1","rating":4,"text":"[합성 리뷰] 가벼워서 휴대하기 편했습니다. 한 개의 예시 의견입니다.","pros":["휴대성"],"cons":[]}
+    ]},
+    {"productId":"watch-10-42","supported":false,"reviews":[]},
+    {"productId":"sold-out-demo","supported":true,"reviews":[]}
+  ]
+}

@@ -1,0 +1,266 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Noto Sans KR', ui-sans-serif, system-ui, sans-serif;
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f5f7fa;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f1f4f7;
+  --header: rgba(255, 255, 255, 0.9);
+  --text: #17202a;
+  --muted: #647180;
+  --subtle: #929ba6;
+  --line: #e5e9ee;
+  --line-strong: #d5dbe2;
+  --primary: #4659e8;
+  --primary-glow: rgba(70, 89, 232, 0.12);
+  --mint: #0ba982;
+  --mint-soft: #e5f7f1;
+  --mint-glow: rgba(11, 169, 130, 0.12);
+  --hero: #111827;
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 18px 50px rgba(15, 23, 42, 0.1);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.app.dark {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --surface: #151b23;
+  --surface-2: #1c2430;
+  --header: rgba(13, 17, 23, 0.9);
+  --text: #edf2f7;
+  --muted: #9aa6b4;
+  --subtle: #707c89;
+  --line: #28313d;
+  --line-strong: #364150;
+  --primary: #6979f3;
+  --primary-glow: rgba(105, 121, 243, 0.17);
+  --mint: #34cda8;
+  --mint-soft: rgba(52, 205, 168, 0.12);
+  --mint-glow: rgba(52, 205, 168, 0.14);
+  --hero: #171e2b;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.logo-symbol {
+  display: grid;
+  height: 36px;
+  width: 36px;
+  place-items: center;
+  color: var(--primary);
+}
+
+.prizm-mark {
+  overflow: visible;
+  filter: drop-shadow(0 7px 10px var(--primary-glow));
+}
+
+.dark .logo-symbol {
+  color: var(--mint);
+}
+
+.icon-button {
+  display: grid;
+  height: 40px;
+  width: 40px;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--muted);
+  transition: 160ms ease;
+}
+
+.icon-button:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+form:has(> input) > svg {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  z-index: 1;
+  color: var(--subtle);
+  transform: translateY(-50%);
+}
+
+.hero-grid {
+  min-height: 310px;
+  isolation: isolate;
+}
+
+.hero-grid::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background:
+    radial-gradient(circle at 68% 15%, rgba(52, 205, 168, 0.22), transparent 30%),
+    linear-gradient(120deg, rgba(70, 89, 232, 0.18), transparent 46%);
+}
+
+.hero-orb {
+  position: absolute;
+  right: 34%;
+  bottom: -90px;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 0 0 36px rgba(255, 255, 255, 0.02), 0 0 0 72px rgba(255, 255, 255, 0.015);
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: #34d399;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.14);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.ai-header {
+  background:
+    radial-gradient(circle at 80% -20%, rgba(52, 205, 168, 0.4), transparent 46%),
+    linear-gradient(135deg, #263681, #4458db);
+}
+
+.entry-hero {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(52, 205, 168, 0.26), transparent 30%),
+    linear-gradient(125deg, #111827 12%, #23346f 58%, #1a6161 120%);
+}
+
+.entry-hero::after {
+  position: absolute;
+  right: -4rem;
+  bottom: -9rem;
+  width: 22rem;
+  height: 22rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 3rem rgba(255, 255, 255, 0.025),
+    0 0 0 6rem rgba(255, 255, 255, 0.015);
+  content: '';
+}
+
+.price-chart {
+  border-radius: 16px;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px);
+  background-size: 100% 38px;
+}
+
+.price-chart svg {
+  display: block;
+  width: 100%;
+  height: 150px;
+}
+
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-grid {
+    min-height: 360px;
+  }
+
+  .hero-grid img {
+    width: 70%;
+    opacity: 0.2;
+  }
+}
+
+/* 사이트2: home carousel, price signal and detail report layout. */
+@keyframes prizmHeroCarousel {
+  0%, 22% { transform: translateX(0); }
+  27%, 49% { transform: translateX(-100%); }
+  54%, 76% { transform: translateX(-200%); }
+  81%, 100% { transform: translateX(-300%); }
+}
+.prizm-hero-track { animation: prizmHeroCarousel 18s ease-in-out infinite; }
+.hero-grid:hover .prizm-hero-track,
+.hero-grid:focus-within .prizm-hero-track { animation-play-state: paused; }
+.ai-radar {
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(circle at 90% 0, rgba(52, 205, 168, .35), transparent 48%), linear-gradient(135deg, #17254d, #3045a0);
+}
+.ai-radar::after {
+  content: '';
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  right: -100px;
+  bottom: -200px;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: 50%;
+  box-shadow: 0 0 0 32px rgba(255, 255, 255, .035), 0 0 0 64px rgba(255, 255, 255, .025);
+  z-index: -1;
+}
+.site2 button:disabled { cursor: default; }
+.site2 button:focus-visible, .site2 a:focus-visible, .site2 [tabindex]:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 4px;
+}
+@media (max-width: 640px) {
+  .prizm-hero-track > article { min-height: 360px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prizm-hero-track { animation: none; }
+}
