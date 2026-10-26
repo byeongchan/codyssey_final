@@ -1,5 +1,7 @@
 """Gemini explanation service for server-owned decisions; explicit fixture mode for tests."""
 import os
+import logging
+import time
 import secrets
 from typing import Annotated, Literal, Protocol
 from uuid import UUID, uuid4
@@ -11,16 +13,23 @@ from fastapi.security import APIKeyHeader
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel, Field, ConfigDict, AwareDatetime, model_validator
 from .review_summary import GeminiReviewProvider, ReviewText
+from .price_agent import GeminiPriceAgent
+from .news_sources import news_for
+from .product_identity import identify
 
 AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "")
+_agent_logger = logging.getLogger("uvicorn.error")
 if os.getenv("APP_ENV", "development") != "development" or AI_PROVIDER not in {"fixture", "gemini"}:
     raise RuntimeError("Only development fixture/gemini explanation modes are implemented")
 INTERNAL_KEY = os.getenv("INTERNAL_API_KEY", "")
 if not INTERNAL_KEY:
     raise RuntimeError("Set INTERNAL_API_KEY before starting the AI service")
 
-app = FastAPI(title="PRIZM development explanation", version="0.4.0")
+app = FastAPI(title="PRIZM development explanation", version="0.8.0")
+if AI_PROVIDER == "gemini":
+    import re
+    _agent_logger.info("AI configured provider=gemini model=%s", GEMINI_MODEL if re.fullmatch(r"gemini-[A-Za-z0-9._-]{1,100}", GEMINI_MODEL) else "INVALID_OR_MISSING")
 
 
 class ErrorDetail(BaseModel):
@@ -207,3 +216,86 @@ def summarize_reviews(data: ReviewInput):
         return ReviewSummary(**result.model_dump(), productId=data.productId, model=GEMINI_MODEL, sampleCount=len(data.reviews))
     except Exception:
         raise HTTPException(status_code=503, detail="Review summary unavailable") from None
+
+
+class NewsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    category: str = Field(default="", max_length=80)
+    keywords: list[Annotated[str, Field(min_length=1, max_length=80)]] = Field(default_factory=list, max_length=12)
+    categoryBasis: Literal["STORED_CATEGORY", "PRODUCT_TEXT_CATEGORY", "DISCOVERY_CATEGORY", "AUTO"]
+    productTitle: str = Field(min_length=1, max_length=500)
+    productId: str = Field(pattern=r"^[0-9]{1,30}$")
+    maker: str = Field(default="", max_length=1000)
+    brand: str = Field(default="", max_length=1000)
+    intro: str = Field(default="", max_length=4000)
+
+
+@app.post("/internal/price-agent/news", dependencies=[Depends(authorize)])
+def agent_news(data: NewsInput):
+    try:
+        identity=None
+        category,keywords,basis=data.category,data.keywords,data.categoryBasis
+        if not category:
+            identity=identify(data.productTitle,data.intro,data.brand,data.maker,os.getenv("GEMINI_API_KEY","") if AI_PROVIDER=="gemini" else "",GEMINI_MODEL)
+            if not identity["category"]:
+                return {"state":"IDENTIFICATION_UNCERTAIN","articles":[],"identity":identity,"version":"identity-unresolved-v1"}
+            category=identity["category"]; keywords=[category]; basis=identity["basis"]
+        result=news_for(category, keywords, basis, data.productTitle, data.productId, data.maker, data.brand, data.intro)
+        if identity:
+            import hashlib,json
+            result["identity"]=identity
+            if identity["basis"]=="AI_INFERRED":
+                for article in result["articles"]:
+                    article["assessmentStage"]="REFERENCE"
+                    article["uncertainties"].append("상품군은 AI 추정 분류이며 실제 모델·사양을 검증한 것은 아닙니다.")
+                if "evaluation" in result:
+                    result["evaluation"]["evidence"]=0;result["evaluation"]["reference"]=len(result["articles"])
+            result["version"]=hashlib.sha256(json.dumps(result,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+        return result
+    except Exception:
+        raise HTTPException(status_code=503, detail="News unavailable") from None
+
+
+class AgentInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    productId: str = Field(pattern=r"^[0-9]{1,30}$")
+    intent: Literal["NEWS", "SELLERS", "SPECS", "TIMING", "PRICE", "OVERVIEW", "CHAT"]
+    evidenceVersion: str = Field(pattern=r"^[a-f0-9]{64}$")
+    model: str = Field(pattern=r"^gemini-[A-Za-z0-9._-]{1,100}$")
+    evidence: dict
+    question: str = Field(min_length=1, max_length=1000)
+    history: list[dict] = Field(default_factory=list, max_length=6)
+
+    @model_validator(mode="after")
+    def bounded_evidence(self):
+        import json
+        if len(json.dumps(self.evidence, ensure_ascii=False)) > 60000 or self.evidence.get("assessment", {}).get("decision") not in {"BUY", "WAIT", "INSUFFICIENT_DATA"}:
+            raise ValueError("Invalid server assessment")
+        if any(set(row)!={"role","content"} or row.get("role") not in {"user","assistant"} or not isinstance(row.get("content"),str) or not 1<=len(row["content"])<=1000 for row in self.history):
+            raise ValueError("Invalid chat history")
+        return self
+
+
+@app.post("/internal/price-agent/analyze", dependencies=[Depends(authorize)])
+def agent_analyze(data: AgentInput):
+    started = time.monotonic()
+    if AI_PROVIDER != "gemini" or data.model != GEMINI_MODEL:
+        _agent_logger.warning("Price agent configuration mismatch requested_model=%s configured_model=%s", data.model, GEMINI_MODEL if AI_PROVIDER == "gemini" else "PROVIDER_NOT_GEMINI")
+        raise HTTPException(status_code=503, detail="Agent configuration mismatch")
+    try:
+        result = GeminiPriceAgent(os.getenv("GEMINI_API_KEY", ""), GEMINI_MODEL, dict).explain(data.evidence, data.intent, data.question, data.history)
+        return {**result, "productId": data.productId, "evidenceVersion": data.evidenceVersion, "model": GEMINI_MODEL}
+    except Exception as exc:
+        # Never log exception messages, request bodies, provider response bodies or keys.
+        code = {
+            "Incomplete agent response": "INCOMPLETE_OUTPUT",
+            "Agent changed server decision": "DECISION_MISMATCH",
+            "Blank agent text": "EMPTY_OUTPUT",
+            "Agent response limit": "OUTPUT_LIMIT",
+            "Explanation service unavailable": "GEMINI_HTTP_ERROR",
+        }.get(str(exc), {
+            "ReadTimeout": "GEMINI_TIMEOUT", "ConnectTimeout": "GEMINI_TIMEOUT",
+            "ConnectError": "GEMINI_CONNECTION", "ValidationError": "RESPONSE_SCHEMA",
+        }.get(type(exc).__name__, "ANALYSIS_FAILED"))
+        _agent_logger.warning("Price agent failed model=%s error_code=%s error_type=%s elapsed_seconds=%.1f", GEMINI_MODEL, code, type(exc).__name__, time.monotonic() - started)
+        raise HTTPException(status_code=503, detail="Agent unavailable") from None

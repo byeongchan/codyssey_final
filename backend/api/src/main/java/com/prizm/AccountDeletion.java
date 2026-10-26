@@ -8,7 +8,7 @@ import java.util.*;
 @Service
 public class AccountDeletion {
     // Current personal collections are leaves. New collections must be added here before being released.
-    private static final List<String> COLLECTIONS = List.of("alerts", "notifications", "wishlist", "danawaWishlist", "history", "conversations");
+    private static final List<String> COLLECTIONS = List.of("alerts", "notifications", "wishlist", "danawaWishlist", "priceAgentContexts", "history", "conversations");
     private final FirebaseAccess firebase;
     public AccountDeletion(FirebaseAccess firebase) { this.firebase = firebase; }
 
@@ -18,6 +18,9 @@ public class AccountDeletion {
             var previous = tx.get(root).get();
             var current = previous.getString("deletionState");
             if (current != null) return current;
+            // Read the same authority document as role changes so deletion and grants serialize.
+            if(AdminAccess.members(tx.get(db.document(AdminAccess.DOCUMENT)).get()).contains(uid))
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"관리자는 탈퇴 전에 다른 관리자에게 권한 해제를 요청하세요");
             tx.set(root, Map.of("deletionState", "DELETING"));
             return "DELETING";
         }));

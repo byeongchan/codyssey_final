@@ -1,7 +1,7 @@
 /** Public search results only: no tokens, account data or AI explanations. */
 import { clearProductImages } from './productImageCache'
 const storageKey = `prizm:danawa-search:v1:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
-const ttl = 15 * 60 * 1000
+const ttl = 24 * 60 * 60 * 1000
 const historyTtl = 30 * 24 * 60 * 60 * 1000
 const changed = 'prizm:search-history-changed'
 type Entry = { query: string; page: number; categoryId?: string; savedAt: number; value: unknown }
@@ -65,4 +65,10 @@ export function clearSearches() {
 export function watchSearches(listener: () => void) {
   window.addEventListener(changed, listener); window.addEventListener('storage', listener)
   return () => { window.removeEventListener(changed, listener); window.removeEventListener('storage', listener) }
+}
+
+export function invalidateSearchResults() {
+  const data = read()
+  data.entries = []
+  write(data)
 }

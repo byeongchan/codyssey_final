@@ -20,7 +20,7 @@ public class LiveModeFilter extends OncePerRequestFilter {
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
         if (live && path.startsWith("/api/") && !path.startsWith("/api/v1/danawa/") && !path.startsWith("/api/v1/me/danawa/") && !path.equals("/api/v1/me")
-                && !path.equals("/api/v1/me/account") && !path.equals("/api/v1/health")) {
+                && !path.equals("/api/v1/me/account") && !path.equals("/api/v1/me/profile") && !path.matches("/api/v1/admin/members/[^/]+/role") && !path.equals("/api/v1/admin/status") && !path.equals("/api/v1/health")) {
             response.setStatus(404); response.setContentType("application/json"); response.setCharacterEncoding("UTF-8");
             response.setHeader("Cache-Control", "no-store");
             response.setHeader("X-Request-Id", RequestIds.of(request));

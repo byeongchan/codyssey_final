@@ -75,7 +75,7 @@ class ApiContractTest {
         try (InputStream input = getClass().getResourceAsStream("/static/openapi.json")) {
             assertNotNull(input); JsonNode spec = mapper.readTree(input);
             Set<String> routes = new HashSet<>();
-            for (Class<?> controller : List.of(ApiController.class, MeController.class, AlertController.class, HistoryController.class, AccountDeletionController.class, ChatController.class, DiscoveryController.class, CollectionController.class, SnapshotController.class, CatalogSourceController.class, SnapshotRetentionController.class, OperationsController.class, DanawaController.class, DanawaExplanationController.class, PublicDanawaController.class, DanawaWishlistController.class)) for (var method : controller.getDeclaredMethods()) {
+            for (Class<?> controller : List.of(ApiController.class, MeController.class, AlertController.class, HistoryController.class, AccountDeletionController.class, ChatController.class, DiscoveryController.class, CollectionController.class, SnapshotController.class, CatalogSourceController.class, SnapshotRetentionController.class, OperationsController.class, DanawaController.class, DanawaExplanationController.class, PublicDanawaController.class, DanawaWishlistController.class, PriceAgentController.class)) for (var method : controller.getDeclaredMethods()) {
                 String prefix = controller.getAnnotation(org.springframework.web.bind.annotation.RequestMapping.class).value()[0].substring("/api/v1".length());
                 var get = method.getAnnotation(GetMapping.class);
                 var post = method.getAnnotation(PostMapping.class);

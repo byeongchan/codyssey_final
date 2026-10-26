@@ -1,0 +1,366 @@
+{
+  "version": "news-impact-v1-provisional",
+  "limits": {
+    "maxQueries": 4,
+    "maxCandidates": 60,
+    "maxSelected": 5,
+    "maxReference": 2,
+    "maxWorkers": 2,
+    "windowDays": 30,
+    "minDescriptionChars": 25,
+    "evidenceDescriptionChars": 45,
+    "evidenceAgeDays": 14,
+    "queryCacheEntries": 96,
+    "analysisCacheEntries": 128,
+    "successTtlSeconds": 900,
+    "failureTtlSeconds": 60,
+    "analysisTtlSeconds": 900,
+    "eventSimilarity": 0.82
+  },
+  "weights": {
+    "direct": 15,
+    "manufacturer": 8,
+    "category": 12,
+    "supplyChain": 14,
+    "policy": 10,
+    "pricePath": 20,
+    "freshness": 7,
+    "source": 6,
+    "sufficiency": 8
+  },
+  "thresholds": {
+    "related": 20,
+    "reference": 35,
+    "evidence": 60
+  },
+  "sourceDomains": [
+    "yna.co.kr",
+    "nvidia.com",
+    "news.samsung.com",
+    "news.skhynix.co.kr",
+    "intel.com",
+    "motie.go.kr",
+    "customs.go.kr"
+  ],
+  "brands": {
+    "NVIDIA": [
+      "nvidia",
+      "엔비디아",
+      "geforce",
+      "지포스"
+    ],
+    "AMD": [
+      "amd",
+      "라데온",
+      "라이젠"
+    ],
+    "Intel": [
+      "intel",
+      "인텔"
+    ],
+    "삼성전자": [
+      "삼성",
+      "samsung",
+      "갤럭시"
+    ],
+    "Apple": [
+      "apple",
+      "애플",
+      "아이폰",
+      "맥북",
+      "아이패드"
+    ],
+    "LG전자": [
+      "lg",
+      "엘지"
+    ],
+    "Lenovo": [
+      "lenovo",
+      "레노버"
+    ],
+    "ASUS": [
+      "asus",
+      "에이수스",
+      "아수스"
+    ],
+    "Sony": [
+      "sony",
+      "소니"
+    ],
+    "샤오미": [
+      "샤오미",
+      "xiaomi"
+    ]
+  },
+  "profiles": {
+    "gpu": {
+      "categories": [
+        "그래픽카드"
+      ],
+      "sector": "GPU",
+      "sectorTerms": [
+        "gpu",
+        "그래픽카드",
+        "그래픽 카드"
+      ],
+      "possibleInputs": [
+        "gddr",
+        "gddr7",
+        "gddr6",
+        "그래픽 메모리"
+      ],
+      "policyTerms": [
+        "반도체",
+        "gpu"
+      ],
+      "queries": [
+        "{category} 가격 재고",
+        "{entity} GPU 생산 공급",
+        "그래픽 메모리 가격 공급",
+        "반도체 관세 수출 규제",
+        "경쟁 GPU 출시 가격 경쟁"
+      ]
+    },
+    "phone": {
+      "categories": [
+        "스마트폰"
+      ],
+      "sector": "스마트폰",
+      "sectorTerms": [
+        "스마트폰",
+        "휴대폰"
+      ],
+      "possibleInputs": [
+        "모바일 d램",
+        "모바일 dram",
+        "스마트폰 디스플레이",
+        "스마트폰 배터리"
+      ],
+      "policyTerms": [
+        "스마트폰",
+        "휴대폰"
+      ],
+      "queries": [
+        "스마트폰 가격 재고",
+        "{entity} 스마트폰 생산 공급",
+        "모바일 D램 가격 공급",
+        "스마트폰 관세 유통",
+        "스마트폰 신제품 가격 경쟁"
+      ]
+    },
+    "laptop": {
+      "categories": [
+        "노트북",
+        "컴퓨터"
+      ],
+      "sector": "노트북",
+      "sectorTerms": [
+        "노트북",
+        "pc",
+        "컴퓨터"
+      ],
+      "possibleInputs": [
+        "d램",
+        "dram",
+        "낸드",
+        "nand",
+        "노트북 배터리"
+      ],
+      "policyTerms": [
+        "컴퓨터",
+        "노트북"
+      ],
+      "queries": [
+        "{category} 가격 재고",
+        "{entity} {category} 생산 공급",
+        "D램 낸드 가격 공급",
+        "{category} 관세 유통",
+        "{category} 신제품 가격 경쟁"
+      ]
+    },
+    "memory": {
+      "categories": [
+        "메모리",
+        "SSD"
+      ],
+      "sector": "메모리 반도체",
+      "sectorTerms": [
+        "메모리",
+        "ssd",
+        "d램",
+        "dram",
+        "낸드",
+        "nand"
+      ],
+      "possibleInputs": [
+        "메모리 웨이퍼"
+      ],
+      "policyTerms": [
+        "반도체",
+        "메모리"
+      ],
+      "queries": [
+        "{category} 가격 재고",
+        "{entity} 메모리 생산 공급",
+        "D램 낸드 가격 감산",
+        "메모리 반도체 관세 수출 규제"
+      ]
+    },
+    "appliance": {
+      "categories": [
+        "가전제품",
+        "냉장고",
+        "세탁기",
+        "건조기",
+        "에어컨",
+        "청소기",
+        "공기청정기",
+        "TV"
+      ],
+      "sector": "생활가전",
+      "sectorTerms": [
+        "가전",
+        "생활가전"
+      ],
+      "possibleInputs": [
+        "가전용 철강",
+        "가전용 구리",
+        "가전 물류"
+      ],
+      "policyTerms": [
+        "가전"
+      ],
+      "queries": [
+        "{category} 가격 할인 재고",
+        "{entity} 가전 생산 공급",
+        "가전 원자재 물류 비용",
+        "가전 관세 가격 정책"
+      ]
+    },
+    "coffee": {
+      "categories": [
+        "커피"
+      ],
+      "sector": "커피",
+      "sectorTerms": [
+        "커피",
+        "원두"
+      ],
+      "possibleInputs": [
+        "커피 원두",
+        "아라비카",
+        "로부스타",
+        "생두"
+      ],
+      "policyTerms": [
+        "커피",
+        "원두"
+      ],
+      "queries": [
+        "커피 가격 할인",
+        "커피 원두 수확 공급",
+        "생두 원두 가격 물류",
+        "커피 관세 수입 비용"
+      ]
+    },
+    "rice": {
+      "categories": [
+        "쌀"
+      ],
+      "sector": "쌀",
+      "sectorTerms": [
+        "쌀",
+        "벼",
+        "양곡"
+      ],
+      "possibleInputs": [
+        "벼 작황",
+        "쌀 수확"
+      ],
+      "policyTerms": [
+        "쌀",
+        "양곡"
+      ],
+      "queries": [
+        "쌀 가격 재고",
+        "쌀 작황 생산 수확",
+        "쌀 물류 유통 비용",
+        "양곡 정책 수입 관세"
+      ]
+    },
+    "food": {
+      "categories": [
+        "식품"
+      ],
+      "sector": "식품",
+      "sectorTerms": [
+        "식품",
+        "식료품"
+      ],
+      "possibleInputs": [],
+      "policyTerms": [
+        "식품"
+      ],
+      "queries": [
+        "식품 가격 할인",
+        "식품 생산 재고",
+        "식품 원가 유통 비용",
+        "식품 관세 가격 정책"
+      ]
+    },
+    "default": {
+      "categories": [],
+      "sector": "",
+      "sectorTerms": [],
+      "possibleInputs": [],
+      "policyTerms": [],
+      "queries": [
+        "{category} 가격 할인",
+        "{category} 공급 재고",
+        "{category} 유통 비용",
+        "{category} 신제품 가격 경쟁"
+      ]
+    }
+  },
+  "productMappings": {},
+  "signals": {
+    "upward": [
+      {
+        "id": "supply_shortage",
+        "pattern": "공급\\s*(?:부족|감소|차질)|생산\\s*(?:차질|중단|감소)|감산|출하량\\s*감소|수확량\\s*감소|흉작",
+        "path": "기사에 기술된 공급 감소 요인 → 해당 상품군의 공급 제약 → 판매가 상승 압력 가능성"
+      },
+      {
+        "id": "cost_increase",
+        "pattern": "(?:가격|원가|단가|물류비|운송비|관세).{0,16}(?:상승|인상|급등)|(?:가격|원가|단가)가?\\s*올랐",
+        "path": "기사에 기술된 비용·가격 상승 요인 → 상품 원가·유통 비용 전가 가능성 → 판매가 상승 압력 가능성"
+      },
+      {
+        "id": "demand_increase",
+        "pattern": "수요\\s*(?:급증|폭증|증가)|재고\\s*(?:부족|소진)",
+        "path": "기사에 기술된 수요 증가·재고 감소 → 수급 긴축 가능성 → 판매가 상승 압력 가능성"
+      }
+    ],
+    "downward": [
+      {
+        "id": "inventory",
+        "pattern": "재고\\s*(?:증가|누적|과잉)|공급(?:량)?\\s*(?:과잉|증가|확대)|생산량\\s*(?:증가|확대)|출하량\\s*증가|수요\\s*(?:감소|위축)|가격\\s*경쟁\\s*(?:심화|확대)",
+        "path": "기사에 기술된 재고·경쟁 요인 → 판매 촉진·가격 경쟁 가능성 → 판매가 하락 압력 가능성"
+      },
+      {
+        "id": "price_cut",
+        "pattern": "(?:가격|판매가|출고가|원가|단가).{0,16}(?:인하|하락|급락)|할인\\s*(?:확대|행사|판매|율)|특가|쿠폰",
+        "path": "기사에 기술된 인하·할인 요인 → 해당 상품군의 실판매가 하락 압력 가능성; 개별 적용 조건은 미확인"
+      },
+      {
+        "id": "resolved",
+        "pattern": "(?:공급|생산).{0,14}(?:정상화|재개)|(?:부족|차질).{0,10}해소",
+        "path": "기사에 기술된 공급·생산 회복 → 기존 공급 제약 완화 가능성 → 가격 상승 압력 완화 가능성"
+      }
+    ],
+    "policy": "관세|수출\\s*(?:규제|제한|통제)|수입\\s*규제|보조금|수입\\s*금지",
+    "speculative": "가능성|전망|예상|우려|검토|논의|추진|할\\s*수\\s*있",
+    "negation": "아니|않(?:았|는|다|고)|없(?:었|는|다)|부인|사실무근|반박",
+    "competition": "경쟁|신제품|신형|출시"
+  }
+}

@@ -31,7 +31,7 @@ export async function request<T>(path: string, signal?: AbortSignal, method: 'GE
   if (protectedPath) await auth?.authStateReady()
   const owner = initialOwner ?? auth?.currentUser?.uid
   const url = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}${path}`
-  const timeout = path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : 12000
+  const timeout = path.startsWith('/me/danawa/agent/') ? 120000 : path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : path.startsWith('/danawa/') ? 30000 : 12000
   if (protectedPath && new URL(url, location.origin).origin !== location.origin)
     throw new Error('로그인 요청은 같은 사이트의 API로만 전송할 수 있습니다.')
   const send = async (refresh: boolean) => {

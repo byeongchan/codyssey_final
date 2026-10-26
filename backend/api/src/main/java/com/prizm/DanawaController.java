@@ -16,9 +16,9 @@ public class DanawaController {
     private final DanawaObservations observations;
     private final LiveDataCache cache;
     private final Set<String> operators = new HashSet<>();
-    @Value("${prizm.live.search-cache-seconds:900}") private long searchTtl = 900;
-    @Value("${prizm.live.product-cache-seconds:21600}") private long productTtl = 21600;
-    @Value("${prizm.live.offers-cache-seconds:300}") private long offersTtl = 300;
+    @Value("${prizm.live.search-cache-seconds:86400}") private long searchTtl = 86400;
+    @Value("${prizm.live.product-cache-seconds:86400}") private long productTtl = 86400;
+    @Value("${prizm.live.offers-cache-seconds:86400}") private long offersTtl = 86400;
     @jakarta.annotation.PostConstruct public void validateCachePolicy() {
         if (List.of(searchTtl, productTtl, offersTtl).stream().anyMatch(value -> value < 1 || value > 604800))
             throw new IllegalArgumentException("실제 데이터 캐시 TTL은 1~604800초 범위로 설정하세요");
@@ -36,10 +36,15 @@ public class DanawaController {
     private void authorize(String token) {
         if (!operators.contains(sessions.verify(token).uid())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "로컬 다나와 조회 권한이 없습니다");
     }
-    private ResponseEntity<?> read(String action, Map<String, Object> body) {
+    private ResponseEntity<?> read(String action, Map<String, Object> body) { return read(action, body, false); }
+    private boolean refresh(JsonNode body) {
+        if (body.has("refresh") && !body.path("refresh").isBoolean()) throw invalid();
+        return body.path("refresh").asBoolean(false);
+    }
+    private ResponseEntity<?> read(String action, Map<String, Object> body, boolean refresh) {
         if (cache != null) {
             var ttl = java.time.Duration.ofSeconds(switch (action) { case "search" -> searchTtl; case "product" -> productTtl; default -> offersTtl; });
-            return cache.response(cache.fetch(action, body, ttl, () -> client.read(action, body)));
+            return cache.response(cache.fetch(action, body, ttl, () -> client.read(action, body), refresh));
         }
         var data = client.read(action, body);
         var meta = new LinkedHashMap<String, Object>();
@@ -74,15 +79,14 @@ public class DanawaController {
     @PostMapping("/danawa/product") public ResponseEntity<?> product(@RequestHeader(value="Authorization", defaultValue="") String token, @RequestBody JsonNode body) {
         authorize(token); return publicProduct(body);
     }
-    ResponseEntity<?> publicProduct(JsonNode body) { page(body, 1); return read("product", Map.of("productId", id(body))); }
+    ResponseEntity<?> publicProduct(JsonNode body) { page(body, 1); return read("product", Map.of("productId", id(body)), refresh(body)); }
     @PostMapping("/danawa/offers") public ResponseEntity<?> offers(@RequestHeader(value="Authorization", defaultValue="") String token, @RequestBody JsonNode body) {
         authorize(token); return publicOffers(body);
     }
-    ResponseEntity<?> publicOffers(JsonNode body) { int page = page(body, 20); return read("offers", Map.of("productId", id(body), "page", page)); }
-    ResponseEntity<?> publicPriceHistory(String productId) {
-        var input = Map.<String, Object>of("productId", productId);
-        if (cache == null) return read("price_history", input);
-        return cache.response(cache.fetch("price_history", input, java.time.Duration.ofHours(6), () -> client.read("price_history", input)));
+    ResponseEntity<?> publicOffers(JsonNode body) { int page = page(body, 20); return read("offers", Map.of("productId", id(body), "page", page), refresh(body)); }
+    ResponseEntity<?> publicPriceHistory(String productId) { return publicPriceHistory(productId, false); }
+    ResponseEntity<?> publicPriceHistory(String productId, boolean refresh) {
+        return read("price_history", Map.of("productId", productId), refresh);
     }
     @PostMapping("/danawa/observations") public ResponseEntity<?> capture(@RequestHeader(value="Authorization", defaultValue="") String token, @RequestBody JsonNode body) {
         authorize(token); int page = page(body, 20); String productId = id(body);

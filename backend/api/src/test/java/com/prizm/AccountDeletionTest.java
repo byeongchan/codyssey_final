@@ -13,6 +13,7 @@ class AccountDeletionTest {
     @Test void deletingMarkerBlocksWritersInsideTheirTransaction() throws Exception {
         var tx = mock(Transaction.class); var root = mock(DocumentReference.class); var doc = mock(DocumentSnapshot.class);
         when(tx.get(root)).thenReturn(ApiFutures.immediateFuture(doc));
+        when(doc.exists()).thenReturn(true);
         when(doc.getString("deletionState")).thenReturn("DELETING");
         assertEquals(409, assertThrows(ResponseStatusException.class, () -> PersonalData.active(tx, root)).getStatusCode().value());
         when(doc.getString("deletionState")).thenReturn("DELETED");
@@ -38,6 +39,7 @@ class AccountDeletionTest {
         assertEquals("DELETED", service.advance("alice"));
         verify(root).collection("conversations");
         verify(root).collection("danawaWishlist");
+        verify(root).collection("priceAgentContexts");
         verify(auth).deleteUser("alice");
         verify(root).set(java.util.Map.of("deletionState", "DELETED"));
     }

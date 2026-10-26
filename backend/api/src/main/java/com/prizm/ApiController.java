@@ -29,7 +29,7 @@ public class ApiController {
     @Value("${prizm.explanation-provider:fixture}") private String explanationProvider = "fixture";
     @Value("${prizm.gemini-model:}") private String geminiModel = "";
     @Value("${prizm.provider:fixture}") private String dataProvider = "fixture";
-    private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build();
+    private final HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(3)).build();
     private final Map<String, Object> batches = new ConcurrentHashMap<>();
     @jakarta.annotation.PostConstruct public void validateExplanationConfiguration() {
         if ("reef-danawa".equals(dataProvider)) return;

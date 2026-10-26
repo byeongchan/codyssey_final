@@ -19,9 +19,9 @@ public class LiveRequestMetrics extends OncePerRequestFilter {
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String path = request.getRequestURI();
         if (!path.startsWith("/api/v1/danawa/") && !path.startsWith("/api/v1/me/danawa/")) { chain.doFilter(request, response); return; }
-        String label = path.replaceAll("/[a-f0-9]{64}$", "/{jobId}").replaceAll("/[0-9]{1,30}$", "/{productId}");
+        String label = path.replaceAll("/[a-f0-9]{64}$", "/{jobId}").replaceAll("/agent/[0-9]{1,30}/messages$", "/agent/{productId}/messages").replaceAll("/[0-9]{1,30}$", "/{productId}");
         Set<String> allowed = Set.of("/api/v1/danawa/search", "/api/v1/danawa/product", "/api/v1/danawa/offers", "/api/v1/danawa/price_history", "/api/v1/danawa/catalog", "/api/v1/danawa/categories",
-            "/api/v1/danawa/jobs/{jobId}", "/api/v1/me/danawa/observations", "/api/v1/me/danawa/history/{productId}", "/api/v1/me/danawa/explanation/{productId}", "/api/v1/me/danawa/review-summary/{productId}", "/api/v1/me/danawa/jobs/{jobId}");
+            "/api/v1/danawa/jobs/{jobId}", "/api/v1/me/danawa/observations", "/api/v1/me/danawa/history/{productId}", "/api/v1/me/danawa/explanation/{productId}", "/api/v1/me/danawa/review-summary/{productId}", "/api/v1/me/danawa/jobs/{jobId}", "/api/v1/me/danawa/agent/{productId}/messages", "/api/v1/me/danawa/agent/jobs/{jobId}");
         if (!allowed.contains(label)) { chain.doFilter(request, response); return; }
         var sample = samples.computeIfAbsent(label, ignored -> new Sample()); long start = System.nanoTime();
         try { chain.doFilter(request, response); }

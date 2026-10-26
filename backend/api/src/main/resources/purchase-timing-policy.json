@@ -1,0 +1,11 @@
+{
+  "version": "timing-v4-provisional-uncalibrated",
+  "periodFallback": {"minSamples": 3, "weeklyMaxAgeDays": 21, "monthlyMaxAgeDays": 62, "dailyMaxAgeDays": 7, "fallingPercent": 5},
+  "productProfiles": {},
+  "profiles": {
+    "default": {"min30": 15, "min90": 45, "minSpan": 60, "maxAgeDays": 3, "reasonable30Pct": 3, "reasonable90Pct": 8, "highPct": 10, "discountPct": 8, "minEpisodes": 3, "maxIntervalRatio": 2, "minBenefitPct": 5, "minReturns": 10},
+    "electronics": {"min30": 18, "min90": 50, "minSpan": 65, "maxAgeDays": 2, "reasonable30Pct": 2, "reasonable90Pct": 6, "highPct": 8, "discountPct": 6, "minEpisodes": 3, "maxIntervalRatio": 2, "minBenefitPct": 4, "minReturns": 12},
+    "fashion": {"min30": 15, "min90": 45, "minSpan": 60, "maxAgeDays": 3, "reasonable30Pct": 3, "reasonable90Pct": 8, "highPct": 15, "discountPct": 15, "minEpisodes": 3, "maxIntervalRatio": 2, "minBenefitPct": 10, "minReturns": 10}
+  },
+  "urgencyDays": {"URGENT": 3, "NORMAL": 14, "FLEXIBLE": 30}
+}

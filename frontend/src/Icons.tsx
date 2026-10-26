@@ -30,7 +30,7 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
         <path d="m5 13 .7 2.3L8 16l-2.3.7L5 19l-.7-2.3L2 16l2.3-.7L5 13Z" />
       </>
     ),
-    moon: <path d="M20 16.5A8.5 8.5 0 0 1 7.5 4 8.5 8.5 0 1 0 20 16.5Z" />,
+    moon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />,
     sun: (
       <>
         <circle cx="12" cy="12" r="4" />

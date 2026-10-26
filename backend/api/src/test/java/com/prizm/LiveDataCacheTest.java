@@ -31,6 +31,37 @@ class LiveDataCacheTest {
         cache = new LiveDataCache(firebase, mapper);
     }
     @AfterEach void close() { cache.close(); }
+    @Test void expiredProductIsReadWithoutUpstreamCollection() {
+        when(document.getString("payloadJson")).thenReturn("{\"product\":{\"productId\":\"123\"}}");
+        when(document.getString("status")).thenReturn("SUCCEEDED");
+        when(document.getLong("expiresAt")).thenReturn(1L);
+        when(document.getLong("storedAt")).thenReturn(System.currentTimeMillis()-172800000);
+        Supplier<JsonNode> loader=mock(Supplier.class);
+        var view=cache.fetch("product",Map.of("productId","123"),Duration.ofDays(1),loader);
+        assertNotNull(view.data());
+        assertTrue(view.expiresAt()<System.currentTimeMillis());
+        verifyNoInteractions(loader);
+    }
+    @Test void manualRefreshWithinMinimumIntervalReusesStoredResult() {
+        when(document.getString("payloadJson")).thenReturn("{\"product\":{\"productId\":\"123\"}}");
+        when(document.getString("status")).thenReturn("SUCCEEDED");
+        when(document.getLong("storedAt")).thenReturn(System.currentTimeMillis());
+        Supplier<JsonNode> loader=mock(Supplier.class);
+        var view=cache.fetch("product",Map.of("productId","123"),Duration.ofDays(1),loader,true);
+        assertNotNull(view.data());
+        verifyNoInteractions(loader);
+    }
+    @Test void manualRefreshJoinsExistingCollectionAndPreservesPreviousData() {
+        when(document.getString("payloadJson")).thenReturn("{\"product\":{\"productId\":\"123\"}}");
+        when(document.getString("status")).thenReturn("RUNNING");
+        when(document.getLong("storedAt")).thenReturn(1L);
+        when(document.getLong("leaseUntil")).thenReturn(System.currentTimeMillis()+60000);
+        Supplier<JsonNode> loader=mock(Supplier.class);
+        var view=cache.fetch("product",Map.of("productId","123"),Duration.ofDays(1),loader,true);
+        assertEquals("RUNNING",view.status());
+        assertNotNull(view.data());
+        verifyNoInteractions(loader);
+    }
     @Test void freshSharedResultDoesNotCallExternalLoaderOrWriteObservationCollections() throws Exception {
         when(document.getString("payloadJson")).thenReturn("{\"source\":\"reef-danawa\",\"synthetic\":false,\"fetchedAt\":\"2026-10-22T03:00:00Z\",\"items\":[]}");
         when(document.getString("status")).thenReturn("SUCCEEDED"); when(document.getLong("expiresAt")).thenReturn(System.currentTimeMillis() + 60000);
@@ -69,6 +100,15 @@ class LiveDataCacheTest {
         when(reference.get()).thenReturn(ApiFutures.immediateFuture(document)); when(document.getString("kind")).thenReturn("explanation");
         var error = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> cache.job("a".repeat(64), false));
         assertEquals(404, error.getStatusCode().value());
+    }
+    @Test void agentJobsArePrivateAndExpiredAnswersAreNotPresentedAsFresh() {
+        when(reference.get()).thenReturn(ApiFutures.immediateFuture(document)); when(document.getString("kind")).thenReturn("agent");
+        when(document.getString("payloadJson")).thenReturn("{\"verdict\":\"판단 보류\"}"); when(document.getLong("expiresAt")).thenReturn(1L);
+        when(document.getString("status")).thenReturn("RUNNING");
+        assertNull(cache.agentJob("a".repeat(64)).data());
+        assertEquals(404, assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> cache.job("a".repeat(64), false)).getStatusCode().value());
+        when(document.getString("status")).thenReturn("SUCCEEDED");
+        assertEquals(409, assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> cache.agentJob("a".repeat(64))).getStatusCode().value());
     }
     @Test void storageErrorsDistinguishMissingIndexAndPermissions() {
         for (var status : List.of(io.grpc.Status.FAILED_PRECONDITION, io.grpc.Status.PERMISSION_DENIED, io.grpc.Status.UNAUTHENTICATED)) {

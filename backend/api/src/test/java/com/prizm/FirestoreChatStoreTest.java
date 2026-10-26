@@ -41,6 +41,7 @@ class FirestoreChatStoreTest {
         assertEquals(409, assertThrows(ResponseStatusException.class, () -> store.send("alice", "p", "same-id", "다른 질문")).getStatusCode().value());
     }
     @Test void deletionMarkerBlocksConversationAndQuotaWrites() {
+        when(user.exists()).thenReturn(true);
         when(user.getString("deletionState")).thenReturn("DELETING");
         assertEquals(409, assertThrows(ResponseStatusException.class, () -> store.send("alice", "p", "id", "가격")).getStatusCode().value());
         verifyNoInteractions(replies); verify(tx, never()).set(eq(document), any());

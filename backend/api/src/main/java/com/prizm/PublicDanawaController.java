@@ -17,9 +17,9 @@ public class PublicDanawaController {
     @PostMapping("/product") public ResponseEntity<?> product(@RequestBody JsonNode body) { return danawa.publicProduct(body); }
     @PostMapping("/offers") public ResponseEntity<?> offers(@RequestBody JsonNode body) { return danawa.publicOffers(body); }
     @PostMapping("/price_history") public ResponseEntity<?> priceHistory(@RequestBody JsonNode body) {
-        if (!body.isObject() || body.size() != 1 || !body.path("productId").isTextual() || !body.path("productId").asText().matches("[0-9]{1,30}"))
+        if (!body.isObject() || (body.size() != 1 && !(body.size() == 2 && body.has("refresh") && body.path("refresh").isBoolean())) || !body.path("productId").isTextual() || !body.path("productId").asText().matches("[0-9]{1,30}"))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "상품 ID를 확인하세요");
-        return danawa.publicPriceHistory(body.path("productId").asText());
+        return danawa.publicPriceHistory(body.path("productId").asText(), body.path("refresh").asBoolean(false));
     }
     @GetMapping("/jobs/{jobId}") public ResponseEntity<?> job(@PathVariable String jobId) { return cache.response(cache.job(jobId, false)); }
     @GetMapping("/catalog") public ResponseEntity<?> catalogue(@RequestParam(defaultValue="") String categoryId) {

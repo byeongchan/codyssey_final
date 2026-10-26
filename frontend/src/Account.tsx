@@ -1,5 +1,8 @@
+import Loading from './Loading'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, reauthenticateWithCredential, EmailAuthProvider, type User } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail, reload, getIdToken, reauthenticateWithCredential, EmailAuthProvider, type User } from 'firebase/auth'
+import AccountDetails from './AccountDetails'
+import SignupForm from './SignupForm'
 import { auth, configurationError } from './firebase'
 import { useSession } from './session'
 import { Icon, PrizmMark } from './Icons'
@@ -22,10 +25,15 @@ function message(error: unknown) {
   return error instanceof Error ? error.message : '요청에 실패했습니다.'
 }
 
-export function AccountPanel({ onClose, presentation = 'dialog', onBusyChange }: { onClose: () => void; presentation?: 'dialog' | 'page'; onBusyChange?: (busy: boolean) => void }) {
-  const { user, ready } = useSession()
+export function AccountPanel({ onClose, onLogout = onClose, presentation = 'dialog', onBusyChange }: { onClose: () => void; onLogout?: () => void; presentation?: 'dialog' | 'page'; onBusyChange?: (busy: boolean) => void }) {
+  const { accountUser: user, ready } = useSession()
   const [register, setRegister] = useState(false)
-  const [displayName, setDisplayName] = useState('')
+  const [signupPending, setSignupPending] = useState(false)
+  useEffect(() => { setSignupPending(Boolean(user && !user.emailVerified)) }, [user?.uid])
+  const [resetPassword, setResetPassword] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [memberName, setMemberName] = useState<string | null>(null)
+  useEffect(() => { setMemberName(null) }, [user?.uid])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -42,21 +50,26 @@ export function AccountPanel({ onClose, presentation = 'dialog', onBusyChange }:
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!auth || busy) return
-    if (register && (displayName.trim().length < 2 || displayName.trim().length > 24)) {
-      setError('표시 이름을 2자 이상 24자 이하로 입력해 주세요.'); return
-    }
     setBusy(true); setError('')
+    setNotice('')
     try {
-      if (register) {
-        const credential = await createUserWithEmailAndPassword(auth, email.trim(), password)
-        setPassword('')
-        try { await updateProfile(credential.user, { displayName: displayName.trim() }) }
-        catch { setError('계정은 생성되었지만 표시 이름을 저장하지 못했습니다. 생성한 이메일과 비밀번호로 로그인할 수 있습니다.'); return }
-      } else await signInWithEmailAndPassword(auth, email.trim(), password)
+      if (resetPassword) {
+        try { await sendPasswordResetEmail(auth, email.trim()) }
+        catch (error) { if (!(error && typeof error === 'object' && 'code' in error && error.code === 'auth/user-not-found')) throw error }
+        setNotice('입력하신 이메일로 가입된 계정이 있다면 재설정 메일을 보냈습니다. 받은편지함과 스팸함을 확인해 주세요.')
+        return
+      }
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password)
+      setPassword('')
+      await reload(credential.user)
+      await getIdToken(credential.user, true)
+      if (!credential.user.emailVerified) { setSignupPending(true); setNotice('가입 화면에서 이메일 인증을 완료해 주세요.'); return }
       setPassword(''); onClose()
     } catch (error) { setError(message(error)) } finally { setBusy(false) }
   }
-  const name = user?.displayName || user?.email?.split('@')[0] || '회원'
+  const name = memberName || '회원'
+  const awaitingVerification = Boolean(user && (!user.emailVerified || signupPending))
+  const showSignup = register || awaitingVerification
   return <div role={page ? 'main' : undefined} className={page ? 'mx-auto max-w-[1180px] px-5 py-10 lg:px-8 lg:py-16' : 'fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-black/50 p-4'} onClick={event => { if (!page && event.target === event.currentTarget && !busy) onClose() }}>
     <div ref={container} tabIndex={-1} role={page ? undefined : 'dialog'} aria-modal={page ? undefined : true} aria-labelledby="account-title" onKeyDown={event => {
       if (page) return
@@ -74,21 +87,26 @@ export function AccountPanel({ onClose, presentation = 'dialog', onBusyChange }:
       </section>
       <section className="p-8 sm:p-12">
         <button disabled={busy} onClick={onClose} className="mb-10 flex items-center gap-1 text-xs font-bold text-[var(--muted)] transition hover:text-[var(--text)] disabled:opacity-50"><span className="rotate-180"><Icon name="arrow" size={14}/></span>{page ? '상품 둘러보기' : '닫기'}</button>
-        <h1 id="account-title" className="text-2xl font-black tracking-tight">{user ? '내 계정' : register ? '회원가입' : '로그인'}</h1><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{user ? 'PRIZM 계정 정보를 확인하고 관리하세요.' : 'PRIZM 계정으로 나의 가격 비교를 이어가세요.'}</p>
+        <h1 id="account-title" className="text-2xl font-black tracking-tight">{showSignup ? '회원가입' : user ? '내 정보' : resetPassword ? '비밀번호 찾기' : '로그인'}</h1><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{showSignup ? '가입 정보 입력과 이메일 인증을 이 화면에서 완료해 주세요.' : user ? 'PRIZM 계정 정보를 확인하고 관리하세요.' : 'PRIZM 계정으로 나의 가격 비교를 이어가세요.'}</p>
         <div className="mt-8">
-          {!ready ? <p role="status" className="py-8 text-center text-sm text-[var(--muted)]">로그인 확인 중…</p> : user ? <div>
-            <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-8 text-center"><span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--mint-soft)] text-xl font-black text-[var(--mint)]">{Array.from(name)[0]}</span><p className="mt-4 break-words text-lg font-black">{name}님</p><p className="mt-1 break-all text-xs text-[var(--muted)]">{user.email}</p><button disabled={busy} className="mt-7 w-full rounded-2xl border border-[var(--line)] px-5 py-3 text-sm font-black transition hover:bg-[var(--surface-2)] disabled:opacity-50" onClick={async () => { if (!auth) return; setBusy(true); setError(''); try { await signOut(auth); onClose() } catch (error) { setError(message(error)) } finally { setBusy(false) } }}>{busy ? '처리 중…' : '로그아웃'}</button></div>
-            <details className="mt-6 rounded-2xl border border-[var(--line)] px-4 py-3"><summary className="cursor-pointer text-xs font-bold text-[var(--muted)]">계정 삭제</summary><DeleteAccount user={user} busy={busy} setBusy={setBusy} onClose={onClose}/></details>
+            {ready && !user && !resetPassword && <div role="group" aria-label="인증 방식 선택" className="mb-7 grid grid-cols-2 rounded-2xl bg-[var(--surface-2)] p-1">{[false, true].map(signup => <button key={String(signup)} type="button" disabled={busy} aria-pressed={register === signup} onClick={() => { setRegister(signup); setPassword(''); setError(''); setNotice('') }} className={`rounded-xl px-4 py-2.5 text-xs font-black transition disabled:opacity-50 ${register === signup ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--muted)]'}`}>{signup ? '회원가입' : '로그인'}</button>)}</div>}
+          {!ready ? <p role="status" className="py-8 text-center text-sm text-[var(--muted)]">로그인 확인 중…</p> : showSignup ? <>
+            <SignupForm user={awaitingVerification ? user : null} busy={busy} setBusy={setBusy} onComplete={() => { setRegister(false); setSignupPending(false); setNotice('이메일 인증과 회원가입이 완료되었습니다.'); setError('') }}/>
+            {user && <><button type="button" disabled={busy} onClick={async () => { if (!auth) return; setBusy(true); try { await signOut(auth); setSignupPending(false); setRegister(false); setNotice(''); setError('') } catch (error) { setError(message(error)) } finally { setBusy(false) } }} className="mt-4 text-xs font-bold text-[var(--muted)] disabled:opacity-40">가입 대기에서 나가기 · 로그아웃</button><details className="mt-4 rounded-2xl border border-[var(--line)] p-4"><summary className="cursor-pointer text-xs text-[var(--muted)]">가입 대기 계정 삭제</summary><DeleteAccount user={user} busy={busy} setBusy={setBusy} onClose={onLogout}/></details></>}
+          </> : user ? <div>
+            <div className="rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-8 text-center"><span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--mint-soft)] text-xl font-black text-[var(--mint)]">{Array.from(name)[0]}</span><p className="mt-4 break-words text-lg font-black">{name}님</p><p className="mt-1 break-all text-xs text-[var(--muted)]">{user.email}</p><button disabled={busy} className="mt-7 w-full rounded-2xl border border-[var(--line)] px-5 py-3 text-sm font-black transition hover:bg-[var(--surface-2)] disabled:opacity-50" onClick={async () => { if (!auth) return; setBusy(true); setError(''); try { await signOut(auth); onLogout() } catch (error) { setError(message(error)) } finally { setBusy(false) } }}>{busy ? '처리 중…' : '로그아웃'}</button></div>
+            <AccountDetails key={user.uid} user={user} busy={busy} setBusy={setBusy} onNameChange={setMemberName}/>
+            <details className="mt-6 rounded-2xl border border-[var(--line)] px-4 py-3"><summary className="cursor-pointer text-xs font-bold text-[var(--muted)]">계정 삭제</summary><DeleteAccount user={user} busy={busy} setBusy={setBusy} onClose={onLogout}/></details>
           </div> : <>
-            <div role="group" aria-label="인증 방식 선택" className="mb-7 grid grid-cols-2 rounded-2xl bg-[var(--surface-2)] p-1">{[false, true].map(signup => <button key={String(signup)} type="button" disabled={busy} aria-pressed={register === signup} onClick={() => { setRegister(signup); setPassword(''); setError('') }} className={`rounded-xl px-4 py-2.5 text-xs font-black transition disabled:opacity-50 ${register === signup ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--muted)]'}`}>{signup ? '회원가입' : '로그인'}</button>)}</div>
             <form onSubmit={submit} className="space-y-3">
-              {register && <label className="block"><span className="sr-only">표시 이름</span><input name="displayName" autoComplete="nickname" minLength={2} maxLength={24} required placeholder="표시 이름 (2~24자)" value={displayName} onChange={event => setDisplayName(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>}
               <label className="block"><span className="sr-only">이메일</span><input name="email" type="email" autoComplete="email" required placeholder="이메일" value={email} onChange={event => setEmail(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>
-              <label className="block"><span className="sr-only">비밀번호</span><input name="password" type="password" minLength={register ? 8 : 6} autoComplete={register ? 'new-password' : 'current-password'} required placeholder={register ? '비밀번호 8자 이상' : '비밀번호'} value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>
-              <button disabled={busy || !auth} className="w-full rounded-2xl bg-[var(--primary)] px-5 py-3.5 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">{busy ? '처리 중…' : register ? 'PRIZM 시작하기' : 'PRIZM 로그인'}</button>
+              {!resetPassword && <label className="block"><span className="sr-only">비밀번호</span><input name="password" type="password" minLength={6} autoComplete="current-password" required placeholder="비밀번호" value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>}
+              <button disabled={busy || !auth} className="w-full rounded-2xl bg-[var(--primary)] px-5 py-3.5 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">{busy ? '처리 중…' : resetPassword ? '재설정 메일 받기' : 'PRIZM 로그인'}</button>
             </form>
+            {!register && <button type="button" disabled={busy} onClick={() => { setResetPassword(previous => !previous); setPassword(''); setError(''); setNotice('') }} className="mt-4 text-xs font-bold text-[var(--primary)] disabled:opacity-50">{resetPassword ? '로그인으로 돌아가기' : '비밀번호를 잊으셨나요?'}</button>}
           </>}
         </div>
+        {notice && <p role="status" className="mt-4 text-center text-xs leading-6 text-[var(--mint)]">{notice}</p>}
         {(error || configurationError) && <p role="alert" className="mt-4 text-center text-xs font-bold leading-6 text-rose-500">{error || configurationError}</p>}
         <p className="mt-6 text-center text-[10px] leading-5 text-[var(--subtle)]">{import.meta.env.VITE_FIREBASE_MODE === 'emulator' ? '로컬 개발용 계정입니다.' : '상품 검색과 가격 비교는 로그인 없이도 이용할 수 있습니다.'}</p>
       </section>
@@ -189,7 +207,7 @@ export function WishlistPage({ onLogin, onProduct }: { onLogin: () => void; onPr
   return <section className={panel}><p className="flex items-center gap-2 text-sm font-extrabold text-[var(--mint)]"><Icon name="heart" size={16}/>MY WISHLIST</p><h1 className="mt-2 text-2xl font-black">찜한 상품</h1>
     {!ready ? <p role="status" className="mt-5">로그인 확인 중…</p> : !user ? <div className="mt-5"><p className="text-sm text-[var(--muted)]">로그인하면 저장한 상품을 확인할 수 있어요.</p><button onClick={onLogin} className="mt-4 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-bold text-white">로그인</button></div> : <>
       {items.map(item => <div key={item.productId} className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-[var(--line)] p-4"><button disabled={!item.product} onClick={() => onProduct(item.productId)} className="min-w-0 text-left"><p className="truncate text-sm font-bold">{item.product?.title ?? `판매 종료 상품 (${item.productId})`}</p><p className="mt-1 text-xs text-[var(--muted)]">{item.product?.priceStale ? '가격 갱신 필요' : item.product?.currentPrice != null ? `${item.product.currentPrice.toLocaleString('ko-KR')}원` : '확정가 없음'}</p></button><button disabled={!!removing} onClick={() => void remove(item.productId)} aria-label={`${item.product?.title ?? item.productId} 찜 해제`} className="shrink-0 text-xs font-bold text-[var(--primary)]">{removing === item.productId ? '해제 중…' : '찜 해제'}</button></div>)}
-      {loading ? <p role="status" className="mt-5">찜 목록 불러오는 중…</p> : !error && !items.length ? <p className="mt-5 text-sm text-[var(--muted)]">아직 찜한 상품이 없습니다.</p> : null}
+      {loading ? <Loading label="찜 목록을 불러오는 중입니다"/> : !error && !items.length ? <p className="mt-5 text-sm text-[var(--muted)]">아직 찜한 상품이 없습니다.</p> : null}
       {error && <div role="alert" className="mt-5 text-sm text-rose-500">{error}<button onClick={() => setRetry(value => value + 1)} className="ml-3 underline">다시 시도</button></div>}
       {!loading && !error && nextCursor && <button onClick={() => setCursor(nextCursor)} className="mt-5 text-sm font-bold text-[var(--primary)]">더 보기</button>}
     </>}

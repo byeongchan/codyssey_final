@@ -29,7 +29,7 @@ export function mapPriceHistory(data, expected) {
     return points;
   };
   // Do not promote all_time_lowest to a verified lifetime minimum; the documented window is bounded.
-  return { productId: expected, currency: 'KRW', weekly: series(data.weekly, false, 12), monthly: series(data.monthly, true, 24) };
+  return { productId: expected, currency: 'KRW', priceBasis: 'PERIOD_MINIMUM_UNKNOWN_SHIPPING', daily: [], weekly: series(data.weekly, false, 12), monthly: series(data.monthly, true, 24) };
 }
 function safeUrl(value) {
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password && !url.port ? url.href : null; }

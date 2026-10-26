@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "PRIZM Spring API",
-    "version": "0.23.0",
+    "version": "0.29.0",
     "description": "실제 다나와 조회는 Firestore 표시 캐시와 공유 수집 작업을 사용한다. 가격 관측은 별도 보관하며 Gemini는 상품 옵션·근거 버전·모델·설명 버전으로 재사용한다."
   },
   "servers": [
@@ -4250,7 +4250,7 @@
     },
     "/danawa/search": {
       "post": {
-        "description": "저장된 결과를 우선 반환한다. 캐시 미스는 공유 작업을 등록하고 202, 오래된 결과는 기존 data와 stale=true/갱신 작업 상태를 반환한다. 실제 관측 시각을 새로 만들지 않는다.",
+        "description": "검색 결과를 DB에 저장하고 재사용합니다. 최신성 기준은 기본 1일이며 기간이 지나도 자동 재수집하지 않습니다. 미저장 검색 조건·페이지는 최초 수집합니다.",
         "security": [],
         "summary": "로그인 없는 다나와 search 조회",
         "requestBody": {
@@ -4357,7 +4357,7 @@
     },
     "/danawa/product": {
       "post": {
-        "description": "저장된 결과를 우선 반환한다. 캐시 미스는 공유 작업을 등록하고 202, 오래된 결과는 기존 data와 stale=true/갱신 작업 상태를 반환한다. 실제 관측 시각을 새로 만들지 않는다.",
+        "description": "저장 자료는 1일이 지나도 자동 갱신하지 않습니다. 없는 자료는 최초 수집하며 refresh=true일 때만 재수집합니다. 갱신 중에는 기존 자료와 COLLECTING 상태를 반환할 수 있습니다.",
         "security": [],
         "summary": "로그인 없는 다나와 product 조회",
         "requestBody": {
@@ -4369,10 +4369,17 @@
                   "productId": {
                     "pattern": "^[0-9]{1,30}$",
                     "type": "string"
+                  },
+                  "refresh": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "명시적 갱신. 동일 자료는 60초 이내 재수집하지 않으며 동시 요청을 병합합니다."
                   }
                 },
                 "type": "object",
-                "required": "productId"
+                "required": [
+                  "productId"
+                ]
               }
             }
           }
@@ -4453,7 +4460,7 @@
     },
     "/danawa/offers": {
       "post": {
-        "description": "저장된 결과를 우선 반환한다. 캐시 미스는 공유 작업을 등록하고 202, 오래된 결과는 기존 data와 stale=true/갱신 작업 상태를 반환한다. 실제 관측 시각을 새로 만들지 않는다.",
+        "description": "저장 자료는 1일이 지나도 자동 갱신하지 않습니다. 없는 자료는 최초 수집하며 refresh=true일 때만 재수집합니다. 갱신 중에는 기존 자료와 COLLECTING 상태를 반환할 수 있습니다.",
         "security": [],
         "summary": "로그인 없는 다나와 offers 조회",
         "requestBody": {
@@ -4471,10 +4478,17 @@
                     "minimum": 1,
                     "type": "integer",
                     "default": 1
+                  },
+                  "refresh": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "명시적 갱신. 동일 자료는 60초 이내 재수집하지 않으며 동시 요청을 병합합니다."
                   }
                 },
                 "type": "object",
-                "required": "productId"
+                "required": [
+                  "productId"
+                ]
               }
             }
           }
@@ -4698,7 +4712,7 @@
     "/danawa/price_history": {
       "post": {
         "summary": "다나와 주간·월간 최저가 이력 조회",
-        "description": "비로그인 가능. 공유 캐시 6시간, 최초/만료 요청은 비동기 수집. 주간 최대 12개·월간 최대 24개이며 일별 관측 저장과 별개다.",
+        "description": "저장 자료는 1일이 지나도 자동 갱신하지 않습니다. 없는 자료는 최초 수집하며 refresh=true일 때만 재수집합니다. 갱신 중에는 기존 자료와 COLLECTING 상태를 반환할 수 있습니다.",
         "requestBody": {
           "required": true,
           "content": {
@@ -4713,6 +4727,11 @@
                   "productId": {
                     "type": "string",
                     "pattern": "^[0-9]{1,30}$"
+                  },
+                  "refresh": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "명시적 갱신. 동일 자료는 60초 이내 재수집하지 않으며 동시 요청을 병합합니다."
                   }
                 }
               }
@@ -4917,6 +4936,312 @@
           },
           "409": {
             "description": "찜 한도/삭제 중/상품 형식 오류"
+          }
+        }
+      }
+    },
+    "/me/danawa/agent/{productId}/messages": {
+      "post": {
+        "responses": {
+          "503": {
+            "description": "저장소 또는 서비스 오류"
+          },
+          "401": {
+            "description": "로그인 필요"
+          },
+          "400": {
+            "description": "질문 형식 오류"
+          },
+          "200": {
+            "description": "고정 안내 또는 근거 기반 답변. data에 verdict,conclusion,priceReasons,newsReasons,risks,dataAsOf,metrics,news,generatedAt"
+          },
+          "409": {
+            "description": "상품 상세 미조회/계정 삭제 중"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "message"
+                ],
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "urgency": {
+                    "type": "string",
+                    "enum": [
+                      "URGENT",
+                      "NORMAL",
+                      "FLEXIBLE"
+                    ],
+                    "default": "NORMAL"
+                  },
+                  "history": {
+                    "type": "array",
+                    "maxItems": 6,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "role",
+                        "content"
+                      ],
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "assistant"
+                          ]
+                        },
+                        "content": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1000
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "pattern": "^[0-9]{1,30}$",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "productId"
+          }
+        ],
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "summary": "로그인 사용자 가격 분석 채팅",
+        "description": "Authenticated product conversation using the real question and up to six recent turns. Personalized answers use a user-scoped process cache and are never written to the shared Firestore answer cache. Public price/news retrieval remains cached."
+      }
+    },
+    "/me/danawa/agent/jobs/{jobId}": {
+      "get": {
+        "responses": {
+          "401": {
+            "description": "로그인 필요"
+          },
+          "404": {
+            "description": "분석 작업 없음"
+          },
+          "202": {
+            "description": "분석 진행 중"
+          },
+          "503": {
+            "description": "작업 실패"
+          },
+          "200": {
+            "description": "공유 분석 결과. 원문 질문/개인 대화는 포함하지 않음"
+          },
+          "409": {
+            "description": "분석 만료"
+          }
+        },
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "in": "path",
+            "name": "jobId"
+          }
+        ],
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "summary": "로그인 사용자 분석 작업 상태"
+      }
+    },
+    "/danawa/display-name-policy": {
+      "get": {
+        "operationId": "displayNamePolicy",
+        "summary": "공개 표시 이름 규칙",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "정규화·길이·금지 이름·변경 간격 규칙"
+          }
+        }
+      }
+    },
+    "/me/profile": {
+      "get": {
+        "operationId": "getMemberProfile",
+        "summary": "본인 표시 이름과 서버 권한",
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "displayName, role(MEMBER/ADMIN), displayNameChangedAt, nextNameChangeAt. 이름·시각은 미등록 시 null."
+          },
+          "401": {
+            "description": "유효한 로그인 필요"
+          },
+          "403": {
+            "description": "이메일 인증 필요"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateMemberDisplayName",
+        "summary": "표시 이름 최초 등록 또는 7일 간격 변경",
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "displayName"
+                ],
+                "properties": {
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 24
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "서버 공식 프로필. 동일 이름은 시각을 갱신하지 않음."
+          },
+          "400": {
+            "description": "금지 이름·잘못된 문자·추가 필드"
+          },
+          "401": {
+            "description": "로그인 필요"
+          },
+          "403": {
+            "description": "이메일 인증 필요"
+          },
+          "409": {
+            "description": "변경 후 7일 미경과 또는 삭제 중"
+          }
+        }
+      }
+    },
+    "/admin/status": {
+      "get": {
+        "operationId": "adminStatus",
+        "summary": "서버 지정 관리자 권한 확인",
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Firestore 관리자 전용 권한 확인. 커뮤니티 관리 기능은 아직 미구현."
+          },
+          "401": {
+            "description": "로그인 필요"
+          },
+          "403": {
+            "description": "관리자 또는 이메일 인증 권한 부족"
+          }
+        }
+      }
+    },
+    "/admin/members/{uid}/role": {
+      "put": {
+        "summary": "Firestore 관리자 권한 부여·해제",
+        "security": [
+          {
+            "FirebaseIdToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "uid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 128
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "MEMBER"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "권한 변경 완료"
+          },
+          "400": {
+            "description": "잘못된 입력"
+          },
+          "401": {
+            "description": "로그인 필요"
+          },
+          "403": {
+            "description": "관리자 필요"
+          },
+          "404": {
+            "description": "회원 없음"
+          },
+          "409": {
+            "description": "마지막 관리자 해제, 미인증·비활성·삭제 중인 계정"
+          },
+          "503": {
+            "description": "Firebase 연결 오류"
           }
         }
       }
@@ -6949,6 +7274,62 @@
                 }
               }
             }
+          }
+        }
+      },
+      "PriceAgentAnswer": {
+        "type": "object",
+        "required": [
+          "decision",
+          "headline",
+          "reasoning",
+          "risks",
+          "wait_condition",
+          "data_limitations",
+          "answer"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "WAIT",
+              "INSUFFICIENT_DATA"
+            ]
+          },
+          "headline": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "reasoning": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "data_limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "wait_condition": {
+            "type": "string",
+            "nullable": true
+          },
+          "showDecision": {
+            "type": "boolean"
+          },
+          "intent": {
+            "type": "string"
           }
         }
       }

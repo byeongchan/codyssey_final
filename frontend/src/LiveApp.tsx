@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import ServiceFooter from './ServiceFooter'
+import RecentProductsBar from './RecentProductsBar'
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 import DanawaPage, { type DanawaSearch } from './Danawa'
 import { AccountPanel } from './Account'
 import { Icon, PrizmMark } from './Icons'
@@ -9,11 +11,16 @@ import { request, type Single } from './api'
 import { LiveWishlistProvider, WishlistPage, useLiveWishlist } from './LiveWishlist'
 
 function HomeCarousel() {
-  return <section aria-label="PRIZM 서비스 소개" aria-roledescription="슬라이드" className="hero-grid relative overflow-hidden rounded-3xl bg-[var(--hero)]" tabIndex={0}>
-    <div className="prizm-hero-track flex">{[...site2Slides, site2Slides[0]].map((slide, index) => <article key={`${slide.accent}:${index}`} aria-hidden={index === site2Slides.length} className="relative min-h-[310px] min-w-full overflow-hidden px-6 py-8 sm:px-9 sm:py-10">
+  const intervalMs = 8000
+  const [active, setActive] = useState(0)
+  const [cycle, setCycle] = useState(0)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  return <section aria-label="PRIZM 서비스 소개" aria-roledescription="캐러셀" className="hero-grid relative overflow-hidden rounded-3xl bg-[var(--hero)]" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocus={() => setFocused(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false) }}>
+    <div className="prizm-hero-track flex" style={{ transform: `translateX(-${active * 100}%)` }}>{site2Slides.map((slide, index) => <article key={slide.accent} aria-hidden={index !== active} aria-label={`${index + 1} / ${site2Slides.length}`} aria-roledescription="슬라이드" className="relative min-h-[310px] min-w-full overflow-hidden px-6 pb-14 pt-8 sm:px-9 sm:pt-10">
       <div className="relative z-10 max-w-xl"><div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-bold text-emerald-200 backdrop-blur"><span className="live-dot"/>{slide.status}</div><p className="mb-2 text-sm font-semibold text-white/60">{slide.eyebrow}</p>{index === 0 ? <h1 className="text-3xl font-black leading-tight tracking-[-0.045em] text-white sm:text-5xl">{slide.title}<br/><span className="text-emerald-300">{slide.accent}</span></h1> : <h2 className="text-3xl font-black leading-tight tracking-[-0.045em] text-white sm:text-5xl">{slide.title}<br/><span className="text-emerald-300">{slide.accent}</span></h2>}<p className="mt-5 max-w-md text-sm leading-6 text-white/65">{slide.description}</p></div>
       <img src={slide.image} alt="" aria-hidden="true" className="absolute inset-y-0 right-0 h-full w-[48%] object-cover opacity-50 mix-blend-luminosity [mask-image:linear-gradient(to_right,transparent,black_35%)]"/><div className="hero-orb"/>
-    </article>)}</div><div aria-hidden="true" className="pointer-events-none absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">{site2Slides.map(slide => <span key={slide.accent} className="h-1.5 w-6 rounded-full bg-white/30"/>)}</div>
+    </article>)}</div><div role="group" aria-label="배너 선택" className="absolute bottom-2 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">{site2Slides.map((slide, index) => <button key={slide.accent} type="button" aria-label={`${index + 1}번 배너: ${slide.title} ${slide.accent}`} aria-pressed={active === index} onClick={() => { setActive(index); setCycle(previous => previous + 1) }} className="grid h-8 min-w-8 place-items-center rounded-full px-1"><span aria-hidden="true" className={`block h-1.5 overflow-hidden rounded-full bg-white/30 ${active === index ? 'w-10' : 'w-6'}`}>{active === index && <span key={`${active}:${cycle}`} className="prizm-carousel-progress block h-full w-full origin-left rounded-full bg-white" style={{ '--carousel-duration': `${intervalMs}ms`, animationPlayState: hovered || focused ? 'paused' : 'running' } as CSSProperties} onAnimationEnd={event => { if (event.animationName === 'prizmCarouselFill') setActive(previous => (previous + 1) % site2Slides.length) }}/>}</span></button>)}</div>
   </section>
 }
 
@@ -40,18 +47,22 @@ function LiveAppPage() {
       .catch(() => { if (!abort.signal.aborted) setServerCategories([]) })
     return () => abort.abort()
   }, [])
-  const { user } = useSession()
+  const { user, accountUser } = useSession()
   const activeCategory = site2Categories.find(item => item.id === category) ?? site2Categories[0]
   const isHome = !searchRequest && !detailView && !wishlist
   function home() {
     if (busy || accountBusy) return
+    returnHome()
+  }
+  function returnHome() {
     const url = new URL(location.href); url.searchParams.delete('product'); history.pushState(null, '', url)
     setWishlist(false); setAccount(false); setDetailView(false); setQuery(''); setCategory(''); setSearchRequest(null); setHomeRevision(value => value + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
   function search(value: string, categoryId = '', browseCategory = false) {
     if (busy || accountBusy || !value.trim()) return
     setAccount(false)
-    setWishlist(false); setQuery(value); setCategory(categoryId)
+    setWishlist(false); setQuery(browseCategory ? '' : value); setCategory(categoryId)
     setSearchRequest(previous => ({ query: value.trim().replace(/\s+/g, ' '), categoryId, browseCategory, revision: (previous?.revision ?? 0) + 1 }))
   }
   function chooseCategory(id: string) {
@@ -81,10 +92,10 @@ function LiveAppPage() {
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-5 px-5 py-4 md:grid md:grid-cols-[1fr_minmax(0,672px)_1fr] lg:px-8">
         <button onClick={home} disabled={busy || accountBusy} aria-label="PRIZM 홈" className="flex shrink-0 items-center gap-2 md:justify-self-start"><span className="logo-symbol"><PrizmMark size={31}/></span><span className="text-xl font-black tracking-[-0.06em] sm:text-2xl">PRIZM</span></button>
         <form onSubmit={submit} className="relative order-3 w-full md:order-none md:justify-self-center"><Icon name="search" size={19}/><input aria-label="상품 검색" required maxLength={100} placeholder="어떤 상품의 최저가를 찾고 계세요?" value={query} onChange={event => setQuery(event.target.value)} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] py-3.5 pl-12 pr-24 text-sm outline-none transition focus:border-[var(--mint)] focus:ring-4 focus:ring-[var(--mint-glow)]"/><button disabled={busy || accountBusy || !query.trim()} className="absolute right-2 top-2 rounded-xl bg-[var(--primary)] px-4 py-2 text-xs font-bold text-white transition hover:brightness-110 disabled:opacity-50">검색</button></form>
-        <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:justify-self-end"><button onClick={() => setDark(!dark)} aria-label={dark ? '라이트 모드' : '다크 모드'} aria-pressed={dark} className="icon-button"><Icon name={dark ? 'sun' : 'moon'} size={19}/></button><button disabled={busy || accountBusy} onClick={() => { if (!user) { openAccount(); return }; setAccount(false); setWishlist(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }} aria-label="찜한 상품" title="찜한 상품" aria-pressed={wishlist && !account} className={`icon-button relative ${wishlist && !account ? 'text-rose-500' : ''}`}><Icon name="heart" size={19}/>{Boolean(savedProducts?.entries.length) && <span className="absolute -right-1 -top-1 rounded-full bg-rose-500 px-1.5 text-[9px] font-bold leading-4 text-white">{savedProducts?.entries.length}</span>}</button><button disabled={busy || accountBusy} onClick={openAccount} aria-label={user ? '내 정보' : '로그인'} title={user?.email || '로그인'} className="icon-button"><Icon name="user" size={19}/></button></div>
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:ml-0 md:justify-self-end"><button onClick={() => setDark(!dark)} aria-label={dark ? '라이트 모드' : '다크 모드'} aria-pressed={dark} className="icon-button"><Icon name={dark ? 'sun' : 'moon'} size={19}/></button><button disabled={busy || accountBusy} onClick={() => { if (!user) { openAccount(); return }; setAccount(false); setWishlist(true); window.scrollTo({ top: 0, behavior: 'smooth' }) }} aria-label="찜한 상품" title="찜한 상품" aria-pressed={wishlist && !account} className={`icon-button relative ${wishlist && !account ? 'text-rose-500' : ''}`}><Icon name="heart" size={19}/>{Boolean(savedProducts?.entries.length) && <span className="absolute -right-1 -top-1 rounded-full bg-rose-500 px-1.5 text-[9px] font-bold leading-4 text-white">{savedProducts?.entries.length}</span>}</button><button disabled={busy || accountBusy} onClick={openAccount} aria-label={accountUser ? '내 정보' : '로그인'} title={accountUser?.email || '로그인'} className="icon-button"><Icon name="user" size={19}/></button></div>
       </div>
-      <div className="border-t border-[var(--line)]"><div className="mx-auto flex max-w-[1440px] items-center gap-4 px-5 py-2.5 lg:px-8"><span className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[var(--mint)]"><Icon name="sparkles" size={15}/>추천 검색어</span><div className="flex min-w-0 flex-1 items-center justify-start gap-6 overflow-x-auto whitespace-nowrap text-xs font-medium text-[var(--muted)] md:justify-center">{site2Suggestions.map((word, index) => <button key={word} disabled={busy || accountBusy} onClick={() => search(word)} className="transition hover:text-[var(--text)] disabled:opacity-50">{index + 1} {word}</button>)}</div><span className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] text-[var(--subtle)] lg:flex"><span className="live-dot"/>로그인 없이 가격 비교</span><button disabled title="커뮤니티 연결 준비 중" className="hidden shrink-0 rounded-full bg-[var(--mint-soft)] px-3 py-1.5 text-[10px] font-black text-[var(--mint)] opacity-60 sm:block">커뮤니티</button></div></div>
-      {recent.length > 0 && <div className="border-t border-[var(--line)]"><div className="mx-auto flex max-w-[1440px] items-center gap-3 overflow-x-auto px-5 py-2 lg:px-8"><span className="flex shrink-0 items-center gap-1.5 text-xs font-bold text-[var(--muted)]"><Icon name="clock" size={14}/>최근 검색</span>{recent.map(word => <button key={word} disabled={busy || accountBusy} onClick={() => search(word)} className="max-w-40 shrink-0 truncate rounded-lg bg-[var(--surface-2)] px-3 py-1.5 text-xs text-[var(--muted)] disabled:opacity-50">{word}</button>)}<button disabled={busy || accountBusy} onClick={clearSearches} className="ml-auto shrink-0 text-[11px] text-[var(--subtle)] disabled:opacity-50">기록 지우기</button></div></div>}
+      <div className="border-t border-[var(--line)]"><div className="mx-auto flex max-w-[1440px] items-center gap-4 px-5 py-2.5 lg:px-8"><span className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[var(--mint)]"><Icon name="sparkles" size={15}/>추천 검색어</span><div className="flex min-w-0 flex-1 items-center justify-start gap-6 overflow-x-auto whitespace-nowrap text-xs font-medium text-[var(--muted)]">{site2Suggestions.map((word, index) => <button key={word} disabled={busy || accountBusy} onClick={() => search(word)} className="transition hover:text-[var(--text)] disabled:opacity-50">{index + 1} {word}</button>)}</div><span className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] text-[var(--subtle)] lg:flex"><span className="live-dot"/>로그인 없이 가격 비교</span><button disabled title="커뮤니티 연결 준비 중" style={{ fontWeight: 900 }} className="hidden shrink-0 rounded-full bg-[var(--mint-soft)] px-3 py-1.5 text-[10px] font-black text-[var(--mint)] opacity-60 sm:block">커뮤니티</button></div></div>
+      {recent.length > 0 && <div className="border-t border-[var(--line)]"><div className="mx-auto flex max-w-[1440px] items-center gap-2 overflow-x-auto px-5 py-1 text-xs font-medium lg:px-8"><span className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-[var(--muted)]"><Icon name="clock" size={12}/>최근 검색</span>{recent.map(word => <button key={word} disabled={busy || accountBusy} onClick={() => search(word)} className="max-w-28 shrink-0 truncate rounded-md bg-[var(--surface-2)] px-2 py-1 text-xs font-medium text-[var(--muted)] disabled:opacity-50" title={word}>{word}</button>)}<button disabled={busy || accountBusy} onClick={clearSearches} className="ml-auto shrink-0 text-[10px] text-[var(--subtle)] disabled:opacity-50">기록 지우기</button></div></div>}
     </header>
     {savedProducts?.error && !account && <div role="alert" className="mx-auto mt-4 max-w-[1440px] px-5 text-sm text-rose-500">{savedProducts.error}<button disabled={savedProducts.loading || savedProducts.busy} onClick={savedProducts.reload} className="ml-3 underline disabled:opacity-50">찜 목록 다시 불러오기</button></div>}
     <main hidden={account || wishlist} className="mx-auto max-w-[1440px] px-5 py-6 lg:px-8">
@@ -103,8 +114,13 @@ function LiveAppPage() {
       </>}
     </main>
     {wishlist && !account && <main className="mx-auto max-w-[1440px] px-5 py-8 lg:px-8"><WishlistPage onLogin={openAccount} onSelect={openSavedProduct}/></main>}
-    {account && <AccountPanel presentation="page" onClose={closeAccount} onBusyChange={setAccountBusy}/>}
-    <footer className="mt-20 border-t border-[var(--line)] bg-[var(--surface)]"><div className="mx-auto max-w-[1440px] px-5 py-10 lg:px-8"><div className="grid gap-8 md:grid-cols-[1fr_1.4fr]"><div><button onClick={home} disabled={busy || accountBusy} aria-label="PRIZM 홈으로 이동" className="flex items-center gap-2"><span className="logo-symbol"><PrizmMark size={30}/></span><span className="text-lg font-black tracking-[-0.05em]">PRIZM</span></button><p className="mt-3 max-w-sm text-xs leading-5 text-[var(--muted)]">가격과 판매 조건을 비교해 더 나은 구매 결정을 돕는 스마트 가격 비교 서비스입니다.</p><p className="mt-5 flex items-start gap-1.5 text-[10px] leading-5 text-[var(--subtle)]"><span className="mt-1"><Icon name="shield" size={13}/></span>가격 정보는 원본 쇼핑몰의 제공 기준이며 실제 결제 조건과 다를 수 있습니다.</p></div><div><p className="mb-4 text-xs font-black">가격 데이터 · 분석 서비스</p><div className="flex flex-wrap gap-2">{['ReefAPI · 다나와', 'Gemini'].map(provider => <span key={provider} className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-[10px] font-extrabold text-[var(--muted)]">{provider}</span>)}</div></div></div><div className="mt-9 flex flex-col gap-3 border-t border-[var(--line)] pt-6 text-[10px] text-[var(--subtle)] sm:flex-row sm:items-center sm:justify-between"><p>© 2026 PRIZM. All rights reserved.</p><p>구매 전 판매처에서 옵션 · 배송비 · 재고를 확인하세요.</p></div></div></footer>
+    {account && <AccountPanel presentation="page" onClose={closeAccount} onLogout={returnHome} onBusyChange={setAccountBusy}/>}
+    {!account && <RecentProductsBar disabled={busy || accountBusy} onSelect={openSavedProduct}/>}
+    <ServiceFooter disabled={busy || accountBusy} signedIn={Boolean(accountUser)} onHome={home} onAccount={openAccount} onWishlist={() => {
+      if (!user) { openAccount(); return }
+      setAccount(false); setWishlist(true); window.scrollTo({ top: 0, behavior: 'smooth' })
+    }}/>
+
 
   </div>
 }

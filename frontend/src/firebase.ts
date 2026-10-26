@@ -16,6 +16,7 @@ try {
     const existing = getApps().find(app => app.name === name)
     const app = existing || initializeApp({ projectId, apiKey: mode === 'cloud' ? import.meta.env.VITE_FIREBASE_API_KEY : 'demo-local-key', authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN }, name)
     auth = existing ? getAuth(app) : initializeAuth(app, { persistence: browserLocalPersistence })
+    auth.languageCode = 'ko'
     if (mode === 'emulator' && !auth.emulatorConfig) connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
   } else configurationError = '로그인이 비활성화되어 있습니다.'
 } catch (error) { auth = null; configurationError = error instanceof Error ? error.message : '로그인 환경을 확인해 주세요.' }

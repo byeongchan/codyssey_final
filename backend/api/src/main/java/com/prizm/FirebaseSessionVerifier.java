@@ -22,6 +22,9 @@ public class FirebaseSessionVerifier implements SessionVerifier {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다");
         try {
             var token = firebase.auth().verifyIdToken(authorization.substring(7).trim(), true);
+            // Unverified owners may still reauthenticate and delete their own account.
+            if (!recent && !Boolean.TRUE.equals(token.getClaims().get("email_verified")))
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이메일 인증을 완료한 뒤 이용해 주세요");
             if (recent) {
                 Object value = token.getClaims().get("auth_time");
                 long now = java.time.Instant.now().getEpochSecond();

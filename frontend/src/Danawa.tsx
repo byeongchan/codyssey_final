@@ -1,19 +1,21 @@
+import Loading from './Loading'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { request, type Meta, type Single } from './api'
 import { collectedRequest, CollectionPending } from './collectedRequest'
-import { useSession } from './session'
 import { Icon, type IconName } from './Icons'
-import { cachedSearch, latestCachedSearch, saveSearch, rememberSearch } from './searchCache'
+import { latestCachedSearch, invalidateSearchResults, saveSearch, rememberSearch } from './searchCache'
 import { productImages, rememberProductImage, watchProductImages } from './productImageCache'
 import DetailInsights from './DetailInsights'
+import PriceAgentChat from './PriceAgentChat'
+import MallPrices, { type Offer } from './MallPrices'
 import { WishlistButton } from './LiveWishlist'
+import { rememberRecentProduct } from './recentProducts'
 
 export type DanawaSearch = { query: string; revision: number; categoryId?: string; browseCategory?: boolean }
 
 type Variant = { productId: string; label: string; listedPrice: number | null }
 type Item = { productId: string; title: string; image?: string | null; displayUpdatedAt?: string | null; displayReceivedAt?: string | null; listedPrice: number | null; maker: string | null; category: string | null; variants: Variant[] }
 type Product = { productId: string; title: string; image?: string | null; images?: string[]; maker: string | null; brand: string | null; intro: string | null; status: string | null; url: string; lowestPrice: number | null; lowestPriceWithShipping: number | null; cashLowestPrice: number | null; priceMismatch: boolean; offerCount: number | null; rating: number | null; reviewCount: number | null; variantProductIds: string[] }
-type Offer = { rowId: string; mall: string; title: string | null; group: string | null; payment: 'card' | 'cash' | 'UNKNOWN'; price: number | null; shippingCost: number | null; shippingText: string | null; quotedTotal: number | null; reportedTotal: number | null; totalMismatch: boolean; availability: 'UNKNOWN'; couponText: string | null; interestFreeText: string | null; url: string | null }
 type Result = { source: 'reef-danawa'; synthetic: false; fetchedAt: string | null; receivedAt: string; localCacheHit: boolean; browserCacheSavedAt?: number; savedCatalogue?: boolean; displayMeta?: Meta; hasMore: boolean; page: number; items: Item[] | null; product: Product | null; offers: Offer[] | null }
 function validSearch(value: unknown): value is Result {
   if (!value || typeof value !== 'object') return false
@@ -40,19 +42,7 @@ function ProductPhoto({ src, title, icon, large = false }: { src?: string | null
     {src && !failed ? <img src={src} alt={title} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} className={`w-full object-contain p-4 ${large ? 'h-72 sm:h-96' : 'h-44'}`}/> : <div className="grid justify-items-center gap-2 p-5"><Icon name={icon} size={large ? 72 : 54}/><span className="text-[11px] text-[var(--muted)]">{failed ? '이미지를 불러오지 못했습니다' : '상품 이미지 미제공'}</span></div>}
   </div>
 }
-type History = { exists: boolean; productId: string; points: { date: string; quotedCardMinimum: number | null; validQuoteSamples: number; observationCount: number }[]; analysis: { verdict: string; reasons: string[]; eligibleObservedDays: number; quotedObservedDays: number; averageQuotedPrice: number | null } }
-type Receipt = { duplicate: boolean; observedAt: string | null; day: string | null; observationId: string; validQuoteSamples: number }
-function HistoryChart({ history }: { history: History }) {
-  const points = history.points.filter(point => point.quotedCardMinimum !== null)
-  const values = points.map(point => point.quotedCardMinimum as number)
-  const low = Math.min(...values), high = Math.max(...values)
-  const start = points.length ? Date.parse(points[0].date) : 0
-  const end = points.length ? Date.parse(points[points.length - 1].date) : 0
-  const coords = points.map(point => `${20 + (Date.parse(point.date) - start) * 560 / Math.max(86400000, end - start)},${150 - ((point.quotedCardMinimum as number) - low) * 120 / Math.max(1, high - low)}`).join(' ')
-  return <article className={card}><h2 className="font-black">저장된 일별 카드 표시가 이력</h2><p className="mt-2 text-xs leading-5 text-[var(--muted)]">한국 날짜 기준 · 조회한 페이지에서 배송비가 확인된 카드 표시가의 일 최저값입니다. 재고·판매처 옵션은 미확인입니다. 최근 90개 관측 날짜만 조회하며 결측 날짜는 채우지 않습니다.</p>{points.length ? <><svg viewBox="0 0 600 180" role="img" aria-label="저장된 다나와 일별 카드 표시가" className="mt-4 w-full"><polyline points={coords} fill="none" stroke="var(--mint)" strokeWidth="3"/>{points.length === 1 && <circle cx="20" cy="150" r="4" fill="var(--mint)"/>}</svg><p className="text-xs text-[var(--muted)]">{points[0].date} ~ {points[points.length - 1].date} · 표시가 {points.length}일</p></> : <p className="mt-4 text-sm">수집 시각과 카드·배송비 조건을 갖춘 저장 표본이 없습니다.</p>}<details className="mt-4"><summary className="cursor-pointer text-sm">날짜별 표본 확인</summary><ul className="mt-2 space-y-2 text-xs">{history.points.map(point => <li key={point.date}>{point.date} · {money(point.quotedCardMinimum)} · 유효 표시가 표본 {point.validQuoteSamples}개 · 저장 관측 {point.observationCount}개</li>)}</ul></details><div className="mt-5 rounded-2xl bg-[var(--surface-2)] p-4"><h3 className="font-bold">구매 판단 보류</h3>{history.analysis.reasons.map(reason => <p key={reason} className="mt-2 text-sm">{reason}</p>)}<p className="mt-2 text-xs text-[var(--muted)]">최근 30일 표시가 관측 {history.analysis.quotedObservedDays}일 · 판단에 사용할 검증 관측 {history.analysis.eligibleObservedDays}일 · 이력 조회는 Gemini를 호출하지 않습니다</p></div></article>
-}
 export default function DanawaPage({ onLogin, embedded = false, homePreview = false, searchRequest = null, categoryIcon = 'search', onBusyChange, onProductChange }: { onLogin: () => void; embedded?: boolean; homePreview?: boolean; searchRequest?: DanawaSearch | null; categoryIcon?: IconName; onBusyChange?: (busy: boolean) => void; onProductChange?: (selected: boolean) => void }) {
-  const { user } = useSession()
   const [query, setQuery] = useState('')
   const [searched, setSearched] = useState('')
   const [result, setResult] = useState<Result | null>(null)
@@ -60,28 +50,26 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
   const listTop = useRef<HTMLElement | null>(null)
   useEffect(() => setListPage(1), [result])
   const [detail, setDetail] = useState<Result | null>(null)
+  useEffect(() => {
+    const product = detail?.product
+    if (!product) return
+    rememberRecentProduct({ productId: product.productId, title: product.title, image: product.image ?? product.images?.[0] ?? null, price: product.lowestPrice })
+  }, [detail])
   const [offers, setOffers] = useState<Result | null>(null)
+  const [refreshRevision, setRefreshRevision] = useState(0)
   const [selected, setSelected] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState<History | null>(null)
-  const [saveNotice, setSaveNotice] = useState('')
-  const [explanation, setExplanation] = useState<{ reasons: string[]; risks: string[]; model: string } | null>(null)
   const [images, setImages] = useState(productImages)
   const [collectionNotice, setCollectionNotice] = useState('')
   const [collectionPending, setCollectionPending] = useState(false)
   const active = useRef<AbortController | null>(null)
-  const privateRequest = useRef(false)
   const locked = useRef(false)
   const retryRequest = useRef<{ action: 'search' | 'product' | 'offers'; body: unknown } | null>(null)
   useEffect(() => () => active.current?.abort(), [])
   useEffect(() => watchProductImages(() => setImages(productImages())), [])
   useEffect(() => { onBusyChange?.(busy) }, [busy, onBusyChange])
   useEffect(() => { onProductChange?.(Boolean(selected)) }, [selected, onProductChange])
-  useEffect(() => {
-    if (privateRequest.current) { active.current?.abort(); locked.current = false; setBusy(false) }
-    setSaved(null); setSaveNotice(''); setExplanation(null)
-  }, [user?.uid])
   useEffect(() => {
     if (!searchRequest) return
     setQuery(searchRequest.query); setSearched(searchRequest.query)
@@ -119,30 +107,25 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
   async function load(action: 'search' | 'product' | 'offers', body: unknown, refresh = false, browseCategory = false) {
     if (locked.current) return
     retryRequest.current = { action, body }
-    privateRequest.current = false
     locked.current = true
     const abort = new AbortController(); active.current?.abort(); active.current = abort
-    setBusy(true); setError(''); setExplanation(null); setImages(productImages()); setCollectionNotice(''); setCollectionPending(false)
+    setBusy(true); setError(''); setImages(productImages()); setCollectionNotice(''); setCollectionPending(false)
     if (action === 'search') {
       const url = new URL(location.href); url.searchParams.delete('product'); history.replaceState(null, '', url)
-      setResult(null); setDetail(null); setOffers(null); setSelected(''); setSaved(null); setSaveNotice('')
+      setResult(null); setDetail(null); setOffers(null); setSelected('');
     }
-    else if (action === 'product') { setDetail(null); setOffers(null); setSaved(null); setSaveNotice('') }
-    else setOffers(null)
+    else if (action === 'product' && !refresh) { setDetail(null); setOffers(null); setRefreshRevision(0); }
+    else if (action === 'offers') setOffers(null)
     try {
       if (action === 'search') {
         const input = body as { query: string; page: number; categoryId?: string }
-        const cached = refresh ? null : cachedSearch(input.query, input.page, validSearch, input.categoryId)
-        if (cached && cached.value.page === input.page) {
-          setResult({ ...cached.value, browserCacheSavedAt: cached.savedAt }); rememberSearch(input.query); return
-        }
         if (browseCategory && input.categoryId) {
           const stored = await request<Single<Result>>(`/danawa/catalog?categoryId=${encodeURIComponent(input.categoryId)}`, abort.signal)
           if (abort.signal.aborted) return
           if (stored.data.items?.length) { setResult({ ...stored.data, displayMeta: stored.meta }); return }
         }
       }
-      const response = await collectedRequest<Result>(`/danawa/${action}`, abort.signal, body, message => { setCollectionNotice(message); setCollectionPending(true) })
+      const response = await collectedRequest<Result>(`/danawa/${action}`, abort.signal, refresh && action !== 'search' ? { ...(body as object), refresh: true } : body, message => { setCollectionNotice(message); setCollectionPending(true) })
       if (abort.signal.aborted) return
       setCollectionPending(false)
       setCollectionNotice(response.meta.collectionState === 'COLLECTING' ? '저장된 이전 결과를 표시하고 있습니다. 새 데이터를 수집 중입니다.' : '')
@@ -156,7 +139,24 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
       }
       else if (action === 'product') {
         setDetail(displayed)
-        if (response.data.product) rememberProductImage(response.data.product.productId, response.data.product.image ?? response.data.product.images?.[0])
+        if (response.data.product) {
+          rememberProductImage(response.data.product.productId, response.data.product.image ?? response.data.product.images?.[0])
+          if (refresh) {
+            setRefreshRevision(value => value + 1)
+            invalidateSearchResults()
+            const updated = response.data.product
+            setResult(previous => previous ? { ...previous, items: previous.items?.map(item => ({
+              ...item,
+              ...(item.productId === updated.productId ? { title: updated.title, listedPrice: updated.lowestPrice, image: updated.image, displayUpdatedAt: response.data.fetchedAt } : {}),
+              variants: item.variants.map(variant => variant.productId === updated.productId ? { ...variant, listedPrice: updated.lowestPrice } : variant),
+            })) ?? null } : previous)
+          }
+          const sellerResponse = await collectedRequest<Result>('/danawa/offers', abort.signal, { productId: response.data.product.productId, page: 1, refresh }, message => { setCollectionNotice(message); setCollectionPending(true) })
+          if (abort.signal.aborted) return
+          setOffers({ ...sellerResponse.data, displayMeta: sellerResponse.meta })
+          setCollectionPending(false)
+          setCollectionNotice(sellerResponse.meta.collectionState === 'COLLECTING' ? '저장된 판매처 가격을 표시하고 있습니다. 새 데이터를 수집 중입니다.' : '')
+        }
       }
       else setOffers(displayed)
     } catch (error) {
@@ -173,45 +173,47 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
     setSelected(productId); void load('product', { productId })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+  async function refreshProduct() {
+    if (locked.current || !selected) return
+    locked.current = true
+    const abort = new AbortController(); active.current?.abort(); active.current = abort
+    setBusy(true); setError(''); setCollectionNotice(''); setCollectionPending(false)
+    setRefreshRevision(value => value + 1)
+    try {
+      const results = await Promise.allSettled([
+        collectedRequest<Result>('/danawa/product', abort.signal, { productId: selected, refresh: true }),
+        collectedRequest<Result>('/danawa/offers', abort.signal, { productId: selected, page: 1, refresh: true }),
+      ])
+      if (abort.signal.aborted) return
+      const [productResult, sellerResult] = results
+      if (productResult.status === 'fulfilled') {
+        const response = productResult.value
+        setDetail({ ...response.data, displayMeta: response.meta })
+        const updated = response.data.product
+        if (updated) {
+          rememberProductImage(updated.productId, updated.image ?? updated.images?.[0])
+          invalidateSearchResults()
+          setResult(previous => previous ? { ...previous, items: previous.items?.map(item => ({
+            ...item,
+            ...(item.productId === updated.productId ? { title: updated.title, listedPrice: updated.lowestPrice, image: updated.image, displayUpdatedAt: response.data.fetchedAt } : {}),
+            variants: item.variants.map(variant => variant.productId === updated.productId ? { ...variant, listedPrice: updated.lowestPrice } : variant),
+          })) ?? null } : previous)
+        }
+      }
+      if (sellerResult.status === 'fulfilled') setOffers({ ...sellerResult.value.data, displayMeta: sellerResult.value.meta })
+      const failed = results.filter(result => result.status === 'rejected')
+      if (failed.length) setError('일부 자료를 갱신하지 못했습니다. 해당 자료는 기존 저장 결과를 유지합니다.')
+    } finally {
+      if (active.current === abort) { locked.current = false; if (!abort.signal.aborted) setBusy(false) }
+    }
+  }
   function returnToList(push = true) {
     if (push) { const url = new URL(location.href); url.searchParams.delete('product'); history.pushState(null, '', url) }
-    setSelected(''); setDetail(null); setOffers(null); setSaved(null); setSaveNotice(''); setExplanation(null); setError(''); setImages(productImages())
+    setSelected(''); setDetail(null); setOffers(null); setError(''); setImages(productImages())
   }
   function search(event: FormEvent) {
     event.preventDefault(); if (locked.current) return
     setSearched(query.trim()); void load('search', { query: query.trim(), page: 1 })
-  }
-  async function stored(capture: boolean) {
-    if (!user) { onLogin(); return }
-    if (locked.current || !selected) return
-    privateRequest.current = true
-    locked.current = true; setBusy(true); setError(''); setSaveNotice(''); setExplanation(null)
-    const abort = new AbortController(); active.current?.abort(); active.current = abort
-    try {
-      if (capture) {
-        const prepared = await collectedRequest<Result>('/danawa/offers', abort.signal, { productId: selected, page: offers?.page ?? 1 })
-        if (abort.signal.aborted) return
-        if (prepared.meta.collectionState === 'COLLECTING') throw new Error('판매처 자료를 갱신 중입니다. 완료 후 다시 저장해 주세요.')
-        const receipt = await request<Single<Receipt>>('/me/danawa/observations', abort.signal, 'POST', { productId: selected, page: offers?.page ?? 1 })
-        if (abort.signal.aborted) return
-        setSaveNotice(`${receipt.data.duplicate ? '이미 보관한 관측입니다.' : '관측을 저장했습니다.'} ${receipt.data.day ? `${receipt.data.day} 일 집계 반영` : '수집 시각 미제공으로 일 집계 제외'}`)
-      }
-      const history = await request<Single<History>>(`/me/danawa/history/${encodeURIComponent(selected)}`, abort.signal)
-      if (!abort.signal.aborted) setSaved(history.data)
-    } catch (error) { if (!abort.signal.aborted) setError(error instanceof Error ? error.message : '관측 저장·이력 조회 실패') }
-    finally { if (active.current === abort) { locked.current = false; if (!abort.signal.aborted) setBusy(false) } }
-  }
-  async function explain() {
-    if (!user) { onLogin(); return }
-    if (locked.current || !selected) return
-    privateRequest.current = true
-    locked.current = true; setBusy(true); setError(''); setExplanation(null)
-    const abort = new AbortController(); active.current?.abort(); active.current = abort
-    try {
-      const result = await collectedRequest<{ reasons: string[]; risks: string[]; model: string }>(`/me/danawa/explanation/${selected}`, abort.signal, undefined)
-      if (!abort.signal.aborted) setExplanation(result.data)
-    } catch (error) { if (!abort.signal.aborted) setError(error instanceof Error ? error.message : 'Gemini 연결 실패') }
-    finally { if (active.current === abort) { locked.current = false; if (!abort.signal.aborted) setBusy(false) } }
   }
   const pageCount = Math.max(1, Math.ceil((result?.items?.length ?? 0) / 12))
   const currentPage = Math.min(listPage, pageCount)
@@ -228,7 +230,7 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
       <p className="mt-3 text-sm leading-6 text-[var(--muted)]">Reef를 통한 실제 조회입니다. 버튼을 누르면 크레딧이 사용될 수 있습니다. 실제 관측은 별도 저장할 수 있습니다. 더미 상품과 분리하며 재고·옵션 미확인 상태에서는 구매 판단과 목표가 알림을 보류합니다.</p>
       <form onSubmit={search} className="mt-4 flex flex-wrap gap-3"><input aria-label="다나와 상품 검색어" required maxLength={100} value={query} onChange={event => setQuery(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] p-3" placeholder="예: SSD 2TB"/><button disabled={busy || !query.trim()} className="rounded-xl bg-[var(--primary)] px-5 py-3 font-bold text-white disabled:opacity-50">검색</button></form>
       </>}
-      {busy && <p role="status" className="mt-3 text-sm">조회 중…</p>}{collectionNotice && <p role="status" className="mt-3 rounded-xl bg-[var(--mint-soft)] p-3 text-xs leading-6 text-[var(--mint)]">{collectionNotice}</p>}{collectionPending && !busy && <button onClick={() => { const previous = retryRequest.current; if (previous) void load(previous.action, previous.body) }} className="mt-3 text-xs font-bold text-[var(--primary)]">수집 상태 다시 확인</button>}{error && <p role="alert" className="mt-3 text-sm text-rose-500">{error}</p>}
+      {busy && <Loading label="상품 정보를 불러오는 중입니다"/>}{collectionNotice && !busy && <p role="status" className="mt-3 rounded-xl bg-[var(--mint-soft)] p-3 text-xs leading-6 text-[var(--mint)]">{collectionNotice}</p>}{collectionPending && !busy && <button onClick={() => { const previous = retryRequest.current; if (previous) void load(previous.action, previous.body) }} className="mt-3 text-xs font-bold text-[var(--primary)]">수집 상태 다시 확인</button>}{error && <p role="alert" className="mt-3 text-sm text-rose-500">{error}</p>}
     </div>
     <div className={selected ? 'grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]' : ''}><div className="min-w-0 space-y-5">
     {embedded && !selected && !result && !busy && !error && !collectionPending && <div className={`${card} grid min-h-48 place-items-center text-center`}><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--mint-soft)] text-[var(--mint)]"><Icon name="search" size={26}/></span><p className="mt-4 font-bold">어떤 상품을 비교해 볼까요?</p><p className="mt-2 text-sm text-[var(--muted)]">검색 전에는 상품과 가격을 임의로 표시하지 않습니다.</p></div></div>}
@@ -268,23 +270,17 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
       {(product.intro || product.priceMismatch) && <div className="border-t border-[var(--line)] p-6 sm:p-8">{product.priceMismatch && <p role="status" className="mb-3 text-sm text-amber-600">원본의 가격 표시가 서로 일치하지 않습니다. 판매 조건을 확인하세요.</p>}{product.intro && <p className="text-sm leading-6 text-[var(--muted)]">{product.intro}</p>}</div>}
     </article>}
 
-    {product && <DetailInsights key={product.productId} productId={product.productId}/>}
-    {saved && <HistoryChart history={saved}/>}
+    {product && <div className={`${card} flex flex-wrap items-center justify-between gap-3`}><div><p className="text-xs text-[var(--muted)]">상품 가격 확인 시각</p><p className="text-sm font-bold">{detail?.fetchedAt ? new Date(detail.fetchedAt).toLocaleString('ko-KR') : '원본 시각 미제공'}</p><p className="mt-1 text-[11px] text-[var(--subtle)]">1일이 지난 자료도 자동 갱신하지 않습니다. 버튼을 누르면 Reef 크레딧을 사용해 상품·판매처 첫 페이지·가격 이력을 수집합니다. 동일 자료는 1분 이내 다시 수집하지 않습니다.</p></div><button disabled={busy} onClick={() => void refreshProduct()} className="flex items-center gap-2 rounded-xl bg-[var(--primary)] px-4 py-3 text-xs font-bold text-white disabled:opacity-40"><Icon name="clock" size={15}/>최신 가격 갱신</button></div>}
+    {product && <DetailInsights key={product.productId} productId={product.productId} refreshRevision={refreshRevision}/>}
+    {product && !offers && <article className={card}><h2 className="font-black">쇼핑몰별 최저가</h2>{busy ? <Loading label="판매처 가격을 불러오는 중입니다"/> : <><p className="mt-3 text-sm text-[var(--muted)]">판매처 가격을 불러오지 못했습니다.</p><button onClick={() => void load('offers', { productId: product.productId, page: 1 })} className="mt-3 text-sm text-[var(--primary)] underline">다시 불러오기</button></>}</article>}
     {offers && <article className={card}>
-      <h2 className="font-black">판매처 가격 · {offers.page}페이지</h2>
-      <p className="mt-3 text-xs leading-5 text-[var(--muted)]">배송비 포함 표시가는 상품가와 확인된 배송비의 합입니다. 재고·판매처 옵션까지 검증한 확정 최저가가 아닙니다. 페이지를 자동으로 순회하지 않으며 다음 페이지는 현재 표를 대체합니다.</p>
-      {!offers.offers?.length && <p className="mt-4">판매처 응답이 비어 있습니다. 품절 여부를 확정하지 않습니다.</p>}
-      <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><caption className="sr-only">선택한 다나와 상품의 판매처별 표시 가격</caption><thead><tr className="border-b border-[var(--line)] text-xs text-[var(--muted)]"><th className="p-3">판매처·상품</th><th className="p-3">결제</th><th className="p-3">상품가</th><th className="p-3">배송비</th><th className="p-3">배송 포함 표시가</th></tr></thead><tbody>{offers.offers?.map(row => <tr key={row.rowId} className="border-b border-[var(--line)] align-top"><td className="max-w-xs p-3"><p className="font-bold">{row.mall}</p><p className="mt-1 text-xs text-[var(--muted)]">{row.title} · {row.group} · 재고 미확인</p>{row.couponText && <p className="mt-1 text-xs">쿠폰 안내: {row.couponText}</p>}{row.interestFreeText && <p className="mt-1 text-xs">{row.interestFreeText}</p>}{row.url && <a href={row.url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-[var(--primary)]">판매처 원본 확인</a>}</td><td className="p-3">{row.payment === 'cash' ? '현금 전용' : row.payment === 'card' ? '카드 결제 가능' : '미확인'}</td><td className="whitespace-nowrap p-3">{money(row.price)}</td><td className="p-3"><p className="whitespace-nowrap">{money(row.shippingCost)}</p><p className="mt-1 text-xs text-[var(--muted)]">{row.shippingText}</p></td><td className="p-3"><p className="whitespace-nowrap font-bold">{money(row.quotedTotal)}</p>{row.totalMismatch && <p className="mt-1 text-xs text-amber-600">원본 합계와 불일치 · 계산 제외</p>}</td></tr>)}</tbody></table></div>
+      <MallPrices offers={offers.offers ?? []}/>
+      <p className="mt-3 text-[10px] text-[var(--subtle)]">판매처 가격 확인: {offers.fetchedAt ? new Date(offers.fetchedAt).toLocaleString('ko-KR') : '원본 시각 미제공'}{offers.displayMeta?.stale ? ' · 최신성 기준 1일 초과 또는 원본 시각 미확인' : ''}</p>
       {offers.hasMore && offers.page < 20 && <button disabled={busy} onClick={() => void load('offers', { productId: selected, page: offers.page + 1 })} className="mt-4 underline disabled:opacity-50">다음 판매처 페이지 조회</button>}
     </article>}
     </div>
     {selected && product && <aside className="min-w-0 space-y-5 self-start xl:sticky xl:top-44">
-      <article className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]">
-        <div className="ai-header p-6 text-white"><p className="mb-3 flex items-center gap-2 text-xs font-black text-emerald-200"><Icon name="sparkles" size={16}/>PRIZM AI REPORT</p><h2 className="text-xl font-black">구매 판단 보류</h2><p className="mt-3 text-xs leading-6 text-white/70">판매처 재고와 옵션 일치가 확인되지 않아 지금은 구매 시점을 확정하지 않습니다.</p></div>
-        <div className="space-y-4 p-6"><div className="flex items-start gap-3"><span className="mt-0.5 text-[var(--mint)]"><Icon name="check" size={17}/></span><div><p className="text-xs font-bold">가격과 판매 조건을 함께 확인</p><p className="mt-1 text-[11px] leading-5 text-[var(--muted)]">카드·현금 가격과 배송비를 구분해서 비교하세요.</p></div></div><div className="flex items-start gap-3"><span className="mt-0.5 text-[var(--primary)]"><Icon name="clock" size={17}/></span><div><p className="text-xs font-bold">직접 저장한 관측으로 이력 확인</p><p className="mt-1 text-[11px] leading-5 text-[var(--muted)]">관측을 저장하고 일별 표시가의 흐름을 살펴보세요.</p></div></div></div>
-      </article>
-    {selected && product && <div className={card}><h2 className="font-black">관측 저장 · 가격 이력</h2><p className="mt-2 text-sm leading-6 text-[var(--muted)]">판매처의 재고는 응답에서 확인되지 않아 미확인으로 표시합니다. 쿠폰은 자동 차감하지 않고 현금 전용 가격도 구분합니다.</p><button disabled={busy} onClick={() => void load('offers', { productId: selected, page: 1 })} className="mt-3 font-bold text-[var(--primary)] disabled:opacity-50">판매처 가격 조회</button><div className="mt-4 flex flex-wrap gap-4"><button disabled={busy} onClick={() => void stored(true)} className="text-sm font-bold text-[var(--primary)] disabled:opacity-50">현재 페이지 조회·저장</button><button disabled={busy} onClick={() => void stored(false)} className="text-sm underline disabled:opacity-50">저장 이력 조회</button></div>{saveNotice && <p role="status" className="mt-3 text-sm">{saveNotice}</p>}<p className="mt-2 text-xs text-[var(--muted)]">저장은 공유 판매처 자료를 먼저 확인하고 원본 관측 시각을 유지합니다. 저장 후 이력 조회가 실패해도 관측은 저장되었을 수 있습니다.</p></div>}
-      {saved?.exists && <article className={card}><div className="mb-4 flex items-center gap-2 font-black"><Icon name="sparkles" size={18}/>{explanation?.model === 'server-rule-only' ? '서버 기본 안내' : 'Gemini 관측 설명'}</div><button disabled={busy} onClick={() => void explain()} className="w-full rounded-xl bg-[var(--primary)] px-4 py-3 text-sm font-bold text-white disabled:opacity-50">관측 한계 설명하기</button><p className="mt-3 text-[11px] leading-5 text-[var(--muted)]">저장된 관측 요약을 Gemini에 전송합니다. 요청 시 API 요금이 발생할 수 있으며 서버의 판단 보류는 유지됩니다.</p>{explanation && <div className="mt-4 space-y-3 border-t border-[var(--line)] pt-4 text-sm leading-6">{explanation.reasons.map((text, i) => <p key={`reason:${i}`}>{text}</p>)}{explanation.risks.map((text, i) => <p key={`risk:${i}`} className="text-xs text-[var(--muted)]">{text}</p>)}<p className="text-[10px] text-[var(--subtle)]">{explanation.model}</p></div>}</article>}
+      <PriceAgentChat productId={product.productId} title={product.title} onLogin={onLogin}/>
     </aside>}
     </div>
   </section>

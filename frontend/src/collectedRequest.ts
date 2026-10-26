@@ -1,4 +1,4 @@
-import { request, type Single } from './api'
+import { ApiRequestError, request, type Single } from './api'
 
 export class CollectionPending extends Error {}
 function pause(ms: number, signal: AbortSignal): Promise<void> {
@@ -10,21 +10,40 @@ function pause(ms: number, signal: AbortSignal): Promise<void> {
   })
 }
 /** Polling only reads Firestore job state; it never creates another collection job. */
-export async function collectedRequest<T>(path: string, signal: AbortSignal, body: unknown, progress?: (message: string) => void): Promise<Single<T>> {
-  const bounded = AbortSignal.any([signal, AbortSignal.timeout(45000)])
+export async function collectedRequest<T>(path: string, signal: AbortSignal, body: unknown, progress?: (message: string) => void, jobPrefix?: string): Promise<Single<T>> {
+  const bounded = AbortSignal.any([signal, AbortSignal.timeout(path.startsWith('/me/danawa/agent/') ? 125000 : 180000)])
+  try {
   let response = await request<Single<T | null>>(path, bounded, 'POST', body)
-  while (response.data === null) {
+  const refreshing = typeof body === 'object' && body !== null && 'refresh' in body && body.refresh === true
+  let transientFailures = 0
+  while (response.data === null || refreshing && response.meta.collectionState === 'COLLECTING') {
     const id = response.meta.collectionJobId
     if (!id) throw new Error('수집 작업 상태를 확인하지 못했습니다.')
     progress?.(response.meta.jobStatus === 'RETRY_WAIT' ? '요청 제한으로 수집 작업이 대기 중입니다.' : '저장 데이터가 없어 수집 중입니다. 같은 요청은 하나의 작업으로 처리합니다.')
-    if (response.meta.jobStatus === 'RETRY_WAIT') throw new CollectionPending('수집 작업이 재시도를 기다리고 있습니다. 약 1분 후 다시 조회하세요.')
-    await pause(Math.max(1, Math.min(5, response.meta.pollAfterSeconds ?? 2)) * 1000, bounded)
-    const prefix = path.startsWith('/me/') ? '/me/danawa/jobs/' : '/danawa/jobs/'
-    try { response = await request<Single<T | null>>(`${prefix}${encodeURIComponent(id)}`, bounded) }
+    await pause(response.meta.jobStatus === 'RETRY_WAIT' ? 5000 : Math.max(1, Math.min(5, response.meta.pollAfterSeconds ?? 2)) * 1000, bounded)
+    const prefix = jobPrefix ?? (path.startsWith('/me/') ? '/me/danawa/jobs/' : '/danawa/jobs/')
+    try {
+      response = await request<Single<T | null>>(`${prefix}${encodeURIComponent(id)}`, bounded)
+      transientFailures = 0
+    }
     catch (error) {
       if (bounded.aborted && !signal.aborted) throw new CollectionPending('수집 작업이 진행 중입니다. 잠시 후 다시 조회하세요.')
+      // Retry only status reads; never repeat a collection or AI POST automatically.
+      if (!signal.aborted && transientFailures < 3 && (
+        error instanceof TypeError || error instanceof DOMException && error.name === 'TimeoutError'
+        || error instanceof ApiRequestError && [429, 502, 503, 504].includes(error.status)
+      )) {
+        transientFailures++
+        await pause(5000, bounded)
+        continue
+      }
       throw error
     }
   }
+  if (refreshing && response.meta.jobStatus === 'FAILED') throw new Error('갱신에 실패했습니다. 기존에 저장된 자료를 유지합니다.')
   return response as Single<T>
+  } catch (error) {
+    if (bounded.aborted && !signal.aborted) throw new CollectionPending('데이터 준비가 예상보다 오래 걸리고 있습니다. 잠시 후 다시 확인해 주세요.')
+    throw error
+  }
 }

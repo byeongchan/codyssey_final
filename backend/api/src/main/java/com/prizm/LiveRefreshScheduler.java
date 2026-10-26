@@ -1,15 +1,9 @@
 package com.prizm;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.*;
-import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.*;
 
-/** Explicit opt-in: at most five recently collected catalogue products per six-hour tick. */
-@Component
-@EnableScheduling
-@ConditionalOnProperty(name="prizm.live.refresh-enabled", havingValue="true")
+/** Legacy helper, intentionally not registered as a bean. Browsing never schedules refreshes. */
 public class LiveRefreshScheduler {
     private final LiveDataCache cache;
     private final DanawaClient collector;
@@ -17,7 +11,6 @@ public class LiveRefreshScheduler {
     public LiveRefreshScheduler(LiveDataCache cache, DanawaClient collector, DanawaObservations observations) {
         this.cache = cache; this.collector = collector; this.observations = observations;
     }
-    @Scheduled(fixedDelayString="${prizm.live.refresh-millis:21600000}", initialDelayString="${prizm.live.refresh-millis:21600000}")
     public void refresh() {
         try {
             int count = 0;

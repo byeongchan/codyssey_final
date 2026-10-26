@@ -74,13 +74,25 @@ public class LiveDataCache {
         } catch (Exception ex) { throw new ResponseStatusException(HttpStatus.CONFLICT, "저장된 표시 데이터 형식을 확인하세요"); }
     }
     public View fetch(String kind, Map<String, Object> input, Duration ttl, Supplier<JsonNode> loader) {
+        return fetch(kind, input, ttl, loader, false);
+    }
+    public View fetch(String kind, Map<String, Object> input, Duration ttl, Supplier<JsonNode> loader, boolean refresh) {
         String id = key(kind, input), owner = UUID.randomUUID().toString(); long now = System.currentTimeMillis();
         var reference = ref(id);
         Claim claim = await(firebase.firestore().runTransaction(tx -> {
             var old = tx.get(reference).get(); var current = view(old, id, kind);
+            boolean archiveMissing="price_history".equals(kind) && current.data()!=null
+                && !tx.get(firebase.firestore().collection("livePriceHistories").document("reef-danawa_"+Objects.toString(input.get("productId"),""))).get().exists();
+            if(archiveMissing) PeriodPriceHistory.write(tx,firebase.firestore(),mapper,current.data(),now);
             var patch = new LinkedHashMap<String, Object>(); patch.put("kind", kind); patch.put("requestedAt", now); patch.put("requests", FieldValue.increment(1));
-            patch.put("retireAt", com.google.cloud.Timestamp.of(java.util.Date.from(Instant.ofEpochMilli(now).plus(Duration.ofDays(30)))));
-            if (current.data() != null && (current.expiresAt() > now || "explanation".equals(kind))) {
+            boolean durable = Set.of("search", "product", "offers", "price_history").contains(kind);
+            patch.put("retireAt", durable ? FieldValue.delete() : com.google.cloud.Timestamp.of(java.util.Date.from(Instant.ofEpochMilli(now).plus(Duration.ofDays(30)))));
+            if (current.data() != null && (durable ? !refresh || number(old,"storedAt") > now - 60_000 : current.expiresAt() > now || "explanation".equals(kind))) {
+                if (durable) {
+                    long expires = number(old,"storedAt") + ttl.toMillis();
+                    patch.put("expiresAt", expires);
+                    current = new View(current.id(), current.kind(), current.data(), current.status(), expires, current.error());
+                }
                 patch.put("hits", FieldValue.increment(1)); tx.set(reference, patch, SetOptions.merge()); return new Claim(current, null);
             }
             if (old.exists() && (number(old, "leaseUntil") > now || number(old, "retryAt") > now)) {
@@ -98,7 +110,10 @@ public class LiveDataCache {
                 catch (RejectedExecutionException ex) { capacity.release(); fail(id, owner, "QUEUE_BUSY", 30_000); }
             } else fail(id, owner, "QUEUE_BUSY", 30_000);
         }
-        return claim.view();
+        var selected = claim.view();
+        if ("agent".equals(kind) && selected.expiresAt() <= System.currentTimeMillis())
+            return new View(selected.id(), kind, null, selected.status(), selected.expiresAt(), selected.error());
+        return selected;
     }
     private void run(String id, String kind, String owner, Map<String, Object> input, Duration ttl, Supplier<JsonNode> loader, int attempt) {
         boolean retryScheduled = false;
@@ -129,7 +144,7 @@ public class LiveDataCache {
             }));
         } catch (Exception ex) {
             int status = ex instanceof ResponseStatusException response ? response.getStatusCode().value() : 500;
-            if (!fetched && !"explanation".equals(kind) && (status == 429 || status == 503) && attempt < 3) {
+            if (!fetched && !Set.of("explanation", "agent").contains(kind) && (status == 429 || status == 503) && attempt < 3) {
                 long delay = status == 429 ? 60_000 : 2000L << (attempt - 1);
                 try {
                     boolean owns = await(firebase.firestore().runTransaction(tx -> {
@@ -154,6 +169,7 @@ public class LiveDataCache {
         }));
     }
     private void catalogue(Transaction tx, String kind, Map<String, Object> input, JsonNode data, long now) throws Exception {
+        if ("price_history".equals(kind)) PeriodPriceHistory.write(tx, firebase.firestore(), mapper, data, now);
         if ("search".equals(kind)) for (JsonNode item : data.path("items")) {
             String productId = item.path("productId").asText();
             if (!productId.matches("[0-9]{1,30}")) continue;
@@ -164,9 +180,14 @@ public class LiveDataCache {
             if (item.path("image").isTextual()) patch.put("image", item.path("image").asText());
             tx.set(firebase.firestore().collection("liveDanawaCatalog").document(productId), patch, SetOptions.merge());
         }
-        if ("product".equals(kind) && data.path("product").path("image").isTextual()) {
+        if ("product".equals(kind)) {
+            var patch = new LinkedHashMap<String,Object>();
+            patch.put("detailJson",mapper.writeValueAsString(data.path("product")));
+            patch.put("detailUpdatedAtMillis",now);
+            patch.put("detailObservedAt",data.path("fetchedAt").isTextual()?data.path("fetchedAt").asText():null);
+            if(data.path("product").path("image").isTextual()) patch.put("image",data.path("product").path("image").asText());
             tx.set(firebase.firestore().collection("liveDanawaCatalog").document(data.path("product").path("productId").asText()),
-                Map.of("image", data.path("product").path("image").asText()), SetOptions.merge());
+                patch, SetOptions.merge());
         }
     }
     public View job(String id, boolean explanation) {
@@ -175,6 +196,17 @@ public class LiveDataCache {
         if (!doc.exists() || kind == null || !Set.of("search", "product", "offers", "price_history", "explanation").contains(kind)
             || ("explanation".equals(kind) != explanation)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "작업을 찾을 수 없습니다");
         return view(doc, id, kind);
+    }
+    public View agentJob(String id) {
+        if (!id.matches("[a-f0-9]{64}")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "작업 ID 형식 오류");
+        var doc = await(ref(id).get());
+        if (!doc.exists() || !"agent".equals(doc.getString("kind"))) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "작업을 찾을 수 없습니다");
+        var current = view(doc, id, "agent");
+        if (current.data() != null && current.expiresAt() <= System.currentTimeMillis()) {
+            if (Set.of("QUEUED", "RUNNING", "RETRY_WAIT").contains(current.status())) return new View(id, "agent", null, current.status(), current.expiresAt(), current.error());
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "분석이 만료되었습니다. 질문을 다시 보내 최신 근거를 확인하세요");
+        }
+        return current;
     }
     public JsonNode catalogue(String categoryId) {
         Query query = firebase.firestore().collection("liveDanawaCatalog");
@@ -185,6 +217,7 @@ public class LiveDataCache {
             try {
                 String json = doc.getString("summaryJson"); if (json == null) continue;
                 ObjectNode item = (ObjectNode)mapper.readTree(json);
+                overlayDetail(item, doc);
                 if (doc.getString("image") != null) item.put("image", doc.getString("image"));
                 item.put("displayUpdatedAt", doc.getString("observedAt")); item.put("displayReceivedAt", doc.getString("receivedAt"));
                 items.add(item);
@@ -211,8 +244,20 @@ public class LiveDataCache {
             var refs = ids.stream().filter(id -> id.matches("[0-9]{1,30}")).limit(200)
                 .map(id -> firebase.firestore().collection("liveDanawaCatalog").document(id)).toArray(DocumentReference[]::new);
             var known = new HashMap<String, String>();
-            for (var doc : await(firebase.firestore().getAll(refs))) if (doc.getString("image") != null) known.put(doc.getId(), doc.getString("image"));
+            var details = new HashMap<String, DocumentSnapshot>();
+            for (var doc : await(firebase.firestore().getAll(refs))) {
+                details.put(doc.getId(),doc);
+                if (doc.getString("image") != null) known.put(doc.getId(), doc.getString("image"));
+            }
             JsonNode copy = source.deepCopy();
+            for (var row : copy.path("items")) {
+                var doc=details.get(row.path("productId").asText());
+                if(doc!=null) overlayDetail((ObjectNode)row,doc);
+                for(var variant:row.path("variants")) {
+                    var variantDoc=details.get(variant.path("productId").asText());
+                    if(variantDoc!=null) overlayDetail((ObjectNode)variant,variantDoc);
+                }
+            }
             for (var row : copy.path("items")) if (row.path("image").isNull() || row.path("image").isMissingNode()) {
                 String image = known.get(row.path("productId").asText());
                 if (image == null) {
@@ -224,11 +269,24 @@ public class LiveDataCache {
                 if (image != null) ((ObjectNode)row).put("image", image);
             }
             return copy;
-        } catch (RuntimeException ex) { return source; }
+        } catch (com.fasterxml.jackson.core.JsonProcessingException | RuntimeException ex) { return source; }
+    }
+    private void overlayDetail(ObjectNode item, DocumentSnapshot doc) throws com.fasterxml.jackson.core.JsonProcessingException {
+        if(doc.getString("detailJson")==null) return;
+        String itemTime=item.path("displayReceivedAt").asText("");
+        long itemMillis=0;
+        try { itemMillis=Instant.parse(itemTime).toEpochMilli(); } catch(Exception ignored) {}
+        if(number(doc,"detailUpdatedAtMillis") < Math.max(number(doc,"updatedAtMillis"),itemMillis)) return;
+        var product=mapper.readTree(doc.getString("detailJson"));
+        if(product.path("lowestPrice").isIntegralNumber()) item.set("listedPrice",product.path("lowestPrice"));
+        if(product.path("title").isTextual() && item.has("title")) item.set("title",product.path("title"));
+        item.put("displayUpdatedAt",doc.getString("detailObservedAt"));
+        item.put("displayReceivedAt",Instant.ofEpochMilli(number(doc,"detailUpdatedAtMillis")).toString());
     }
     public ResponseEntity<?> response(View view) {
         long now = System.currentTimeMillis(); boolean pending = Set.of("QUEUED", "RUNNING", "RETRY_WAIT").contains(view.status());
         var meta = new LinkedHashMap<String, Object>(); meta.put("requestId", RequestIds.current()); meta.put("source", "explanation".equals(view.kind()) ? "gemini" : "reef-danawa");
+        if ("agent".equals(view.kind())) meta.put("source", view.data()==null ? "server-rule" : view.data().path("source").asText("server-rule"));
         meta.put("synthetic", false); meta.put("referenceTime", Instant.now().toString()); meta.put("cacheHit", view.data() != null);
         meta.put("readSource", "firestore");
         meta.put("cacheFresh", view.data() != null && (view.expiresAt() > now || "explanation".equals(view.kind())));
@@ -237,7 +295,7 @@ public class LiveDataCache {
         meta.put("collectionJobId", view.id()); meta.put("jobStatus", view.status()); meta.put("pollAfterSeconds", pending ? 2 : 0);
         meta.put("collectionState", pending ? "COLLECTING" : view.data() == null ? "FAILED" : "READY");
         String observed = view.data() == null ? null : view.data().path("fetchedAt").textValue(); meta.put("updatedAt", observed);
-        long priceAge = "offers".equals(view.kind()) ? 300 : 900;
+        long priceAge = 86400;
         boolean old = observed == null || Instant.parse(observed).isBefore(Instant.now().minusSeconds(priceAge));
         meta.put("stale", view.expiresAt() <= now || old); meta.put("errorCode", view.error());
         JsonNode payload = view.data();
@@ -263,7 +321,7 @@ public class LiveDataCache {
         var values = new LinkedHashMap<String, Object>(); values.put("sampleSize", rows.size()); values.put("scope", "최근 요청한 캐시 키 최대 100개");
         for (String field : List.of("requests", "hits", "merged", "successes", "failures")) values.put(field, rows.stream().mapToLong(row -> number(row, field)).sum());
         var kinds = new LinkedHashMap<String, Object>();
-        for (String kind : List.of("search", "product", "offers", "price_history", "explanation")) {
+        for (String kind : List.of("search", "product", "offers", "price_history", "explanation", "agent")) {
             var selected = rows.stream().filter(row -> kind.equals(row.getString("kind"))).toList();
             var stats = new LinkedHashMap<String, Object>();
             for (String field : List.of("requests", "hits", "merged", "successes", "failures")) stats.put(field, selected.stream().mapToLong(row -> number(row, field)).sum());

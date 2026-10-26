@@ -3,11 +3,10 @@ import { onIdTokenChanged, type User } from 'firebase/auth'
 import { auth } from './firebase'
 
 export function useSession() {
-  const [user, setUser] = useState<User | null>(auth?.currentUser ?? null)
-  const [ready, setReady] = useState(!auth)
+  const [session, setSession] = useState<{ accountUser: User | null; ready: boolean }>({ accountUser: auth?.currentUser ?? null, ready: !auth })
   useEffect(() => {
     if (!auth) return
-    return onIdTokenChanged(auth, user => { setUser(user); setReady(true) }, () => { setUser(null); setReady(true) })
+    return onIdTokenChanged(auth, accountUser => { setSession({ accountUser, ready: true }) }, () => { setSession({ accountUser: null, ready: true }) })
   }, [])
-  return { user, ready }
+  return { user: session.accountUser?.emailVerified ? session.accountUser : null, accountUser: session.accountUser, ready: session.ready }
 }

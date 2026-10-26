@@ -20,7 +20,7 @@ public class DanawaExplanationController {
     private final String url, key, model, provider;
     private final Set<String> operators;
     private final LiveDataCache cache;
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+    private final HttpClient http = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(2)).build();
     public DanawaExplanationController(SessionVerifier sessions, DanawaObservations observations, AnalysisQuota quota, ObjectMapper mapper,
         String url, String key, String model, String provider, String uids) {
         this(sessions, observations, quota, mapper, url, key, model, provider, uids, null);

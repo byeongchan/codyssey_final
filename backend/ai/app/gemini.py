@@ -1,5 +1,6 @@
 """One bounded generateContent request. No SDK auto retries or configurable remote URL."""
 import json
+import logging
 import re
 import time
 from typing import Annotated
@@ -20,6 +21,8 @@ def validate_text(value: ExplanationText) -> None:
 
 
 class GeminiExplanationProvider:
+    request_timeout = 4.0
+    response_timeout = 6.0
     def __init__(self, key, model, factory, transport=None):
         if not key or not re.fullmatch(r"gemini-[A-Za-z0-9._-]{1,100}", model):
             raise RuntimeError("Set GEMINI_API_KEY and a valid GEMINI_MODEL")
@@ -32,14 +35,15 @@ class GeminiExplanationProvider:
         import httpx  # Optional dependency, never imported by fixture mode.
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         started = time.monotonic()
-        with httpx.Client(timeout=httpx.Timeout(4.0, connect=2.0), trust_env=False, follow_redirects=False) as client:
+        with httpx.Client(timeout=httpx.Timeout(self.request_timeout, connect=2.0), trust_env=False, follow_redirects=False) as client:
             with client.stream("POST", url, headers={"x-goog-api-key": self.key}, json=payload) as response:
                 if response.status_code != 200:
+                    logging.getLogger("uvicorn.error").warning("Gemini request failed model=%s http_status=%s", self.model, response.status_code)
                     raise ValueError("Explanation service unavailable")
                 body = bytearray()
                 for chunk in response.iter_bytes():
                     body.extend(chunk)
-                    if len(body) > 65536 or time.monotonic() - started > 6:
+                    if len(body) > 65536 or time.monotonic() - started > self.response_timeout:
                         raise ValueError("Explanation response limit")
         return json.loads(body)
 
