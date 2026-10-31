@@ -42,6 +42,27 @@ class LiveDataCacheTest {
         assertTrue(view.expiresAt()<System.currentTimeMillis());
         verifyNoInteractions(loader);
     }
+    @Test void expiredUsedSearchJoinsCollectionInsteadOfReturningACacheHit() {
+        when(document.getString("payloadJson")).thenReturn("{\"items\":[]}");
+        when(document.getString("status")).thenReturn("RUNNING");
+        when(document.getLong("storedAt")).thenReturn(System.currentTimeMillis()-172800000);
+        when(document.getLong("leaseUntil")).thenReturn(System.currentTimeMillis()+60000);
+        Supplier<JsonNode> loader=mock(Supplier.class);
+        var view=cache.fetch("used-karrot-search",Map.of("query","폰","regionId","5789"),Duration.ofDays(1),loader);
+        assertEquals("RUNNING",view.status());
+        verify(transaction).set(eq(reference),argThat((Map<String,Object> patch)->patch.containsKey("merged") && !patch.containsKey("hits")),any(SetOptions.class));
+        verifyNoInteractions(loader);
+    }
+    @Test void freshUsedSearchReusesResultWithoutAnotherCollection() {
+        when(document.getString("payloadJson")).thenReturn("{\"items\":[]}");
+        when(document.getString("status")).thenReturn("SUCCEEDED");
+        when(document.getLong("storedAt")).thenReturn(System.currentTimeMillis()-60000);
+        Supplier<JsonNode> loader=mock(Supplier.class);
+        var view=cache.fetch("used-karrot-search",Map.of("query","폰","regionId","5789"),Duration.ofDays(1),loader);
+        assertNotNull(view.data());
+        verify(transaction).set(eq(reference),argThat((Map<String,Object> patch)->patch.containsKey("hits")),any(SetOptions.class));
+        verifyNoInteractions(loader);
+    }
     @Test void manualRefreshWithinMinimumIntervalReusesStoredResult() {
         when(document.getString("payloadJson")).thenReturn("{\"product\":{\"productId\":\"123\"}}");
         when(document.getString("status")).thenReturn("SUCCEEDED");

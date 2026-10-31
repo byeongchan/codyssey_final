@@ -28,7 +28,7 @@ public class LiveDataCache {
     public static String normalize(String query) { return query.strip().replaceAll("\\s+", " "); }
     public String key(String kind, Object input) {
         try { return FixtureSnapshots.hash(mapper.copy().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-            .writeValueAsBytes(Map.of("schema", "live-cache-v1", "kind", kind, "input", input))); }
+            .writeValueAsBytes(Map.of("schema", "used-karrot-search".equals(kind) ? "karrot-region-v2" : "live-cache-v1", "kind", kind, "input", input))); }
         catch (Exception ex) { throw new IllegalArgumentException("잘못된 캐시 조건"); }
     }
     private <T> T await(com.google.api.core.ApiFuture<T> future) {
@@ -85,9 +85,14 @@ public class LiveDataCache {
                 && !tx.get(firebase.firestore().collection("livePriceHistories").document("reef-danawa_"+Objects.toString(input.get("productId"),""))).get().exists();
             if(archiveMissing) PeriodPriceHistory.write(tx,firebase.firestore(),mapper,current.data(),now);
             var patch = new LinkedHashMap<String, Object>(); patch.put("kind", kind); patch.put("requestedAt", now); patch.put("requests", FieldValue.increment(1));
-            boolean durable = Set.of("search", "product", "offers", "price_history").contains(kind);
+            boolean durable = Set.of("search", "product", "offers", "price_history", "musinsa-search", "musinsa-product", "musinsa-reviews").contains(kind)
+                || kind.startsWith("used-") && (kind.endsWith("-search") || kind.endsWith("-detail"));
             patch.put("retireAt", durable ? FieldValue.delete() : com.google.cloud.Timestamp.of(java.util.Date.from(Instant.ofEpochMilli(now).plus(Duration.ofDays(30)))));
-            if (current.data() != null && (durable ? !refresh || number(old,"storedAt") > now - 60_000 : current.expiresAt() > now || "explanation".equals(kind))) {
+            boolean usedSearch = Set.of("used-joongna-search", "used-karrot-search").contains(kind);
+            boolean reusable = usedSearch
+                ? (refresh ? number(old,"storedAt") > now - 60_000 : number(old,"storedAt") + ttl.toMillis() > now)
+                : durable ? !refresh || number(old,"storedAt") > now - 60_000 : current.expiresAt() > now || "explanation".equals(kind);
+            if (current.data() != null && reusable) {
                 if (durable) {
                     long expires = number(old,"storedAt") + ttl.toMillis();
                     patch.put("expiresAt", expires);
@@ -169,6 +174,29 @@ public class LiveDataCache {
         }));
     }
     private void catalogue(Transaction tx, String kind, Map<String, Object> input, JsonNode data, long now) throws Exception {
+        if(kind.startsWith("used-") && (kind.endsWith("-search") || kind.endsWith("-detail"))) {
+            String provider=data.path("provider").asText(); UsedController.provider(provider);
+            if(!("reef-"+provider).equals(data.path("source").asText())) throw new IllegalArgumentException("Used source mismatch");
+            Iterable<JsonNode> rows=kind.endsWith("-detail")?List.of(data.path("product")):data.path("items");
+            for(var item:rows) {
+                String id=item.path("productId").asText(); UsedController.id(id);
+                var patch=new LinkedHashMap<String,Object>(); patch.put("provider",provider); patch.put("summaryJson",mapper.writeValueAsString(item));
+                patch.put("observedAt",data.path("fetchedAt").textValue()); patch.put("storedAt",now);
+                tx.set(firebase.firestore().collection("liveUsedCatalog").document(provider+"_"+id),patch,SetOptions.merge());
+            }
+            return;
+        }
+        if(Set.of("musinsa-search","musinsa-product").contains(kind)) {
+            if(!"reef-musinsa".equals(data.path("source").asText())) throw new IllegalArgumentException("Musinsa source mismatch");
+            Iterable<JsonNode> rows="musinsa-product".equals(kind)?List.of(data.path("product")):data.path("items");
+            for(var item:rows) {
+                String productId=item.path("productId").asText(); DanawaWishlist.validId(productId);
+                var patch=new LinkedHashMap<String,Object>(); patch.put("source","reef-musinsa"); patch.put("summaryJson",mapper.writeValueAsString(item));
+                patch.put("observedAt",data.path("fetchedAt").textValue()); patch.put("receivedAt",data.path("receivedAt").asText()); patch.put("storedAt",now);
+                tx.set(firebase.firestore().collection("liveMusinsaCatalog").document(productId),patch,SetOptions.merge());
+            }
+            return;
+        }
         if ("price_history".equals(kind)) PeriodPriceHistory.write(tx, firebase.firestore(), mapper, data, now);
         if ("search".equals(kind)) for (JsonNode item : data.path("items")) {
             String productId = item.path("productId").asText();
@@ -207,6 +235,22 @@ public class LiveDataCache {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "분석이 만료되었습니다. 질문을 다시 보내 최신 근거를 확인하세요");
         }
         return current;
+    }
+    public View usedJob(String id) {
+        if(!id.matches("[a-f0-9]{64}")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"작업 ID 형식 오류");
+        var doc=await(ref(id).get()); String kind=doc.getString("kind");
+        if(!doc.exists() || kind==null || !Set.of("used-joongna-search","used-joongna-detail","used-karrot-search","used-karrot-detail","used-karrot-regions","used-karrot-categories").contains(kind)) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"중고 조회 작업을 찾을 수 없습니다");
+        return view(doc,id,kind);
+    }
+    public View musinsaJob(String id) {
+        if(!id.matches("[a-f0-9]{64}")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"작업 ID 형식 오류");
+        var doc=await(ref(id).get()); String kind=doc.getString("kind");
+        if(!doc.exists() || kind==null || !Set.of("musinsa-search","musinsa-product","musinsa-reviews").contains(kind)) throw new ResponseStatusException(HttpStatus.NOT_FOUND,"무신사 작업을 찾을 수 없습니다");
+        return view(doc,id,kind);
+    }
+    public void requireMusinsaProduct(String id) {
+        var doc=await(firebase.firestore().collection("liveMusinsaCatalog").document(id).get());
+        if(!doc.exists() || !"reef-musinsa".equals(doc.getString("source"))) throw new ResponseStatusException(HttpStatus.CONFLICT,"무신사 패션·스포츠 상품을 먼저 조회하세요");
     }
     public JsonNode catalogue(String categoryId) {
         Query query = firebase.firestore().collection("liveDanawaCatalog");
@@ -286,6 +330,8 @@ public class LiveDataCache {
     public ResponseEntity<?> response(View view) {
         long now = System.currentTimeMillis(); boolean pending = Set.of("QUEUED", "RUNNING", "RETRY_WAIT").contains(view.status());
         var meta = new LinkedHashMap<String, Object>(); meta.put("requestId", RequestIds.current()); meta.put("source", "explanation".equals(view.kind()) ? "gemini" : "reef-danawa");
+        if(view.kind().startsWith("musinsa-")) meta.put("source","reef-musinsa");
+        if(view.kind().startsWith("used-")) meta.put("source",view.kind().startsWith("used-karrot-")?"reef-karrot":"reef-joongna");
         if ("agent".equals(view.kind())) meta.put("source", view.data()==null ? "server-rule" : view.data().path("source").asText("server-rule"));
         meta.put("synthetic", false); meta.put("referenceTime", Instant.now().toString()); meta.put("cacheHit", view.data() != null);
         meta.put("readSource", "firestore");
@@ -313,6 +359,18 @@ public class LiveDataCache {
             } catch (Exception ignored) { /* Keep the standard collection error if storage is unavailable. */ }
         }
         var body = new LinkedHashMap<String, Object>(); body.put("data", payload); body.put("meta", meta);
+        if(payload==null && !pending && view.kind().startsWith("used-")) {
+            int status="HTTP_404".equals(view.error())?404:"HTTP_429".equals(view.error())?429:503;
+            String message=status==404?"중고 매물을 찾을 수 없습니다":"중고 조회에 실패했습니다. 수집기 REEF_USED_ENABLED·API 키·연결 상태를 확인하세요";
+            body.put("error",Map.of("code","HTTP_"+status,"message",message,"requestId",RequestIds.current(),"retryable",status!=404));
+            return ResponseEntity.status(status).header("Cache-Control","no-store").body(body);
+        }
+        if(payload==null && !pending && view.kind().startsWith("musinsa-")) {
+            int status=switch(Objects.toString(view.error(),"")){case "HTTP_404"->404;case "HTTP_422"->422;case "HTTP_429"->429;default->503;};
+            String message=switch(status){case 404->"상품 또는 요청한 무신사 페이지가 없습니다";case 422->"무신사 패션·스포츠 상품만 조회할 수 있습니다";case 429->"무신사 요청 한도에 도달했습니다. 잠시 후 다시 시도하세요";default->"무신사 조회에 실패했습니다. 수집기의 REEF_MUSINSA_ENABLED·API 키·연결 상태를 확인하세요";};
+            body.put("error",Map.of("code","HTTP_"+status,"message",message,"requestId",RequestIds.current(),"retryable",status==429 || status>=500));
+            return ResponseEntity.status(status).header("Cache-Control","no-store").body(body);
+        }
         if (payload == null && !pending) body.put("error", Map.of("code", "COLLECTION_FAILED", "message", "수집을 완료하지 못했습니다. 잠시 후 다시 요청하세요", "requestId", RequestIds.current(), "retryable", true));
         return ResponseEntity.status(payload == null ? pending ? 202 : 503 : 200).header("Cache-Control", "no-store").header("Vary", "Authorization").body(body);
     }

@@ -18,7 +18,7 @@ class LiveModeTest {
             new LiveModeFilter("reef-danawa", new ObjectMapper()).doFilter(new MockHttpServletRequest("GET", path), response, (a,b) -> reached.set(true));
             assertFalse(reached.get()); assertEquals(404, response.getStatus());
         }
-        for (String path : new String[]{"/api/v1/me/danawa/search", "/api/v1/danawa/search", "/api/v1/danawa/product", "/api/v1/danawa/offers"}) {
+        for (String path : new String[]{"/api/v1/me/danawa/search", "/api/v1/danawa/search", "/api/v1/danawa/product", "/api/v1/danawa/offers", "/api/v1/community/posts", "/api/v1/me/community/posts", "/api/v1/musinsa/search", "/api/v1/me/musinsa/wishlist"}) {
             var reached = new AtomicBoolean();
             new LiveModeFilter("reef-danawa", new ObjectMapper()).doFilter(new MockHttpServletRequest("POST", path), new MockHttpServletResponse(), (a,b) -> reached.set(true));
             assertTrue(reached.get());

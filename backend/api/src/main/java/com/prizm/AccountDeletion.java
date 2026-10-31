@@ -8,7 +8,7 @@ import java.util.*;
 @Service
 public class AccountDeletion {
     // Current personal collections are leaves. New collections must be added here before being released.
-    private static final List<String> COLLECTIONS = List.of("alerts", "notifications", "wishlist", "danawaWishlist", "priceAgentContexts", "history", "conversations");
+    private static final List<String> COLLECTIONS = List.of("alerts", "notifications", "wishlist", "danawaWishlist", "musinsaWishlist", "usedWishlist", "priceAgentContexts", "history", "conversations");
     private final FirebaseAccess firebase;
     public AccountDeletion(FirebaseAccess firebase) { this.firebase = firebase; }
 
@@ -31,6 +31,20 @@ public class AccountDeletion {
             var documents = PersonalData.await(root.collection(name).limit(100).get()).getDocuments();
             if (!documents.isEmpty()) {
                 var batch = db.batch(); documents.forEach(doc -> batch.delete(doc.getReference()));
+                PersonalData.await(batch.commit());
+                return "DELETING";
+            }
+        }
+        // Remove identity from shared posts and delete personal comments before authentication.
+        for (String name : List.of("communityPosts", "communityComments")) {
+            var documents = PersonalData.await(db.collection(name).whereEqualTo("authorUid", uid).limit(100).get()).getDocuments();
+            if (!documents.isEmpty()) {
+                var batch = db.batch();
+                for (var doc : documents) {
+                    // Withdrawal preserves published posts, but removes the member's identity.
+                    if ("communityPosts".equals(name)) batch.update(doc.getReference(), Map.of("authorUid", "", "authorName", "탈퇴한 회원"));
+                    else batch.delete(doc.getReference());
+                }
                 PersonalData.await(batch.commit());
                 return "DELETING";
             }

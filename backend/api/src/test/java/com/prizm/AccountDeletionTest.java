@@ -35,10 +35,15 @@ class AccountDeletionTest {
         assertEquals("DELETING", service.advance("alice"));
         verify(batch).delete(childRef); verifyNoInteractions(auth);
         when(snapshot.getDocuments()).thenReturn(List.of());
+        when(db.collection("communityPosts")).thenReturn(collection);
+        when(db.collection("communityComments")).thenReturn(collection);
+        when(collection.whereEqualTo("authorUid", "alice")).thenReturn(query);
+        when(query.limit(100)).thenReturn(query);
         when(root.set(anyMap())).thenReturn(ApiFutures.immediateFuture(null));
         assertEquals("DELETED", service.advance("alice"));
         verify(root).collection("conversations");
         verify(root).collection("danawaWishlist");
+        verify(root).collection("musinsaWishlist");
         verify(root).collection("priceAgentContexts");
         verify(auth).deleteUser("alice");
         verify(root).set(java.util.Map.of("deletionState", "DELETED"));

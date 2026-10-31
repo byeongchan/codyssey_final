@@ -14,7 +14,20 @@ export class DanawaProvider {
     let body;
     if (action === 'search') {
       if (typeof input.query !== 'string' || !input.query.trim() || input.query.trim().length > 100) throw failure(400);
-      body = { query: input.query.trim(), scope: 'catalog', sort: 'popular', page: page(input.page, 50) };
+      const sort = input.sort ?? 'popular';
+      if (!['popular', 'price_asc', 'price_desc', 'newest', 'most_reviewed'].includes(sort)) throw failure(400);
+      body = { query: input.query.trim(), scope: 'catalog', sort, page: page(input.page, 50) };
+      if (input.maker !== undefined) {
+        if (typeof input.maker !== 'string' || !/^[0-9]{1,20}$/.test(input.maker)) throw failure(400);
+        body.maker = input.maker;
+      }
+      for (const [key, field] of [['minPrice', 'min_price'], ['maxPrice', 'max_price']]) {
+        if (input[key] !== undefined) {
+          if (!Number.isSafeInteger(input[key]) || input[key] < 0 || input[key] > 100_000_000) throw failure(400);
+          body[field] = input[key];
+        }
+      }
+      if (input.minPrice !== undefined && input.maxPrice !== undefined && input.minPrice > input.maxPrice) throw failure(400);
     } else {
       if (typeof input.productId !== 'string' || !/^[0-9]{1,30}$/.test(input.productId)) throw failure(400);
       body = { product_id: input.productId };

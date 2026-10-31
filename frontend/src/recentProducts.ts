@@ -1,4 +1,5 @@
-export type RecentProduct = { productId: string; title: string; image: string | null; price: number | null; viewedAt: number }
+import { productIdentity, type ProductProvider } from './productSource'
+export type RecentProduct = { productId: string; provider?: ProductProvider; title: string; image: string | null; price: number | null; viewedAt: number }
 
 const key = `prizm:recent-products:v1:${import.meta.env.VITE_API_BASE_URL || '/api/v1'}`
 const changed = 'prizm:recent-products-changed'
@@ -22,12 +23,12 @@ export function recentProducts(): RecentProduct[] {
   const now = Date.now()
   const seen = new Set<string>()
   return (Array.isArray(value) ? value : []).filter((item): item is RecentProduct => {
-    if (!item || typeof item.productId !== 'string' || !/^\d{1,30}$/.test(item.productId) || seen.has(item.productId)
+    if (!item || typeof item.productId !== 'string' || !(item.provider === 'joongna' || item.provider === 'karrot' ? /^[A-Za-z0-9_-]{1,100}$/.test(item.productId) : /^\d{1,30}$/.test(item.productId)) || (item.provider !== undefined && !['danawa', 'musinsa', 'joongna', 'karrot'].includes(item.provider)) || seen.has(productIdentity(item.productId, item.provider))
       || typeof item.title !== 'string' || !item.title.trim() || item.title.length > 1000
       || !Number.isFinite(item.viewedAt) || item.viewedAt > now || now - item.viewedAt >= retention
       || !(item.image === null || safeImage(item.image))
-      || !(item.price === null || Number.isSafeInteger(item.price) && item.price > 0)) return false
-    seen.add(item.productId)
+      || !(item.price === null || Number.isSafeInteger(item.price) && item.price >= 0)) return false
+    seen.add(productIdentity(item.productId, item.provider))
     return true
   }).sort((a, b) => b.viewedAt - a.viewedAt).slice(0, 5)
 }
@@ -40,7 +41,7 @@ function save(items: RecentProduct[]) {
 
 export function rememberRecentProduct(product: Omit<RecentProduct, 'viewedAt'>) {
   const item = { ...product, title: product.title.slice(0, 1000), image: safeImage(product.image) ? product.image : null, viewedAt: Date.now() }
-  save([item, ...recentProducts().filter(previous => previous.productId !== product.productId)].slice(0, 5))
+  save([item, ...recentProducts().filter(previous => productIdentity(previous.productId, previous.provider) !== productIdentity(product.productId, product.provider))].slice(0, 5))
 }
 
 export function clearRecentProducts() { save([]) }

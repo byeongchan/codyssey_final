@@ -45,7 +45,7 @@ public class PriceAgentController {
             var uri = URI.create(aiUrl);
             if (!"http".equals(uri.getScheme()) || !Set.of("localhost", "127.0.0.1").contains(Objects.toString(uri.getHost(), "")) || uri.getUserInfo()!=null
                 || uri.getQuery()!=null || uri.getFragment()!=null || !Set.of("", "/").contains(uri.getPath()) || key.isBlank()) throw new IllegalArgumentException();
-            var request = java.net.http.HttpRequest.newBuilder(uri.resolve(path)).timeout(Duration.ofSeconds("/internal/price-agent/news".equals(path)?24:40)).header("Content-Type", "application/json")
+            var request = java.net.http.HttpRequest.newBuilder(uri.resolve(path)).timeout(Duration.ofSeconds("/internal/price-agent/news".equals(path)?24:85)).header("Content-Type", "application/json")
                 .header("X-Internal-Key", key).POST(java.net.http.HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build();
             var response = http.send(request, HttpResponse.BodyHandlers.ofInputStream());
             byte[] bytes; try (var stream = response.body()) { bytes = stream.readNBytes(65537); }

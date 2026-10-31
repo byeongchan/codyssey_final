@@ -14,6 +14,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel, Field, ConfigDict, AwareDatetime, model_validator
 from .review_summary import GeminiReviewProvider, ReviewText
 from .price_agent import GeminiPriceAgent
+from .used_agent import GeminiUsedAgent
+
 from .news_sources import news_for
 from .product_identity import identify
 
@@ -299,3 +301,36 @@ def agent_analyze(data: AgentInput):
         }.get(type(exc).__name__, "ANALYSIS_FAILED"))
         _agent_logger.warning("Price agent failed model=%s error_code=%s error_type=%s elapsed_seconds=%.1f", GEMINI_MODEL, code, type(exc).__name__, time.monotonic() - started)
         raise HTTPException(status_code=503, detail="Agent unavailable") from None
+
+
+class UsedAgentInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    model: str = Field(pattern=r"^gemini-[A-Za-z0-9._-]{1,100}$")
+    evidenceVersion: str = Field(pattern=r"^[a-f0-9]{64}$")
+    evidence: dict
+    question: str = Field(min_length=1, max_length=1000)
+    history: list[dict] = Field(default_factory=list, max_length=6)
+
+    @model_validator(mode="after")
+    def bounded_used_evidence(self):
+        import json
+        if len(json.dumps(self.evidence, ensure_ascii=False)) > 60000:
+            raise ValueError("Used evidence limit")
+        if self.evidence.get("assessment", {}).get("decision") not in {"INSUFFICIENT_DATA", "ADDITIONAL_CHECK", "CHECK_AVAILABILITY"}:
+            raise ValueError("Invalid used assessment")
+        for row in self.history:
+            if set(row) != {"role", "content"} or row.get("role") not in {"user", "assistant"} or not isinstance(row.get("content"), str) or not 1 <= len(row["content"]) <= 1000:
+                raise ValueError("Invalid used history")
+        return self
+
+
+@app.post("/internal/used-agent/analyze", dependencies=[Depends(authorize)])
+def used_agent_analyze(data: UsedAgentInput):
+    if AI_PROVIDER != "gemini" or data.model != GEMINI_MODEL:
+        raise HTTPException(status_code=503, detail="Used agent configuration mismatch")
+    try:
+        agent = GeminiUsedAgent(os.getenv("GEMINI_API_KEY", ""), GEMINI_MODEL, dict)
+        result = agent.explain(data.evidence, data.question, data.history)
+        return {**result, "model": GEMINI_MODEL, "evidenceVersion": data.evidenceVersion}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Used agent unavailable") from None

@@ -45,7 +45,7 @@ export function mapSearch(data) {
   const items = data.results.filter(row => row?.row_type === 'product').map(row => {
     const productId = id(row.product_id);
     if (row.variants != null && (!Array.isArray(row.variants) || row.variants.length > 100)) invalid();
-    return { productId, title: title(row.title), maker: text(row.maker), category: text(row.category), image: imageUrl(row.image),
+    return { productId, title: title(row.title), maker: text(row.maker), makerCode: /^[0-9]{1,20}$/.test(String(row.maker_code ?? '')) ? String(row.maker_code) : null, category: text(row.category), image: imageUrl(row.image),
       listedPrice: row.currency === 'KRW' ? money(row.price) : null, url: canonicalUrl(productId),
       variants: (row.variants ?? []).map(variant => ({ productId: id(variant.product_id), label: text(variant.label, 500) ?? '옵션명 미확인',
         listedPrice: row.currency === 'KRW' ? money(variant.price) : null })) };

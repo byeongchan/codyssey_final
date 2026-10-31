@@ -31,18 +31,18 @@ export async function request<T>(path: string, signal?: AbortSignal, method: 'GE
   if (protectedPath) await auth?.authStateReady()
   const owner = initialOwner ?? auth?.currentUser?.uid
   const url = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}${path}`
-  const timeout = path.startsWith('/me/danawa/agent/') ? 120000 : path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : path.startsWith('/danawa/') ? 30000 : 12000
+  const timeout = body instanceof FormData ? 60000 : path.startsWith('/me/used/agent/') ? 180000 : path.startsWith('/me/danawa/agent/') ? 120000 : path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : path.startsWith('/danawa/') ? 30000 : 12000
   if (protectedPath && new URL(url, location.origin).origin !== location.origin)
     throw new Error('로그인 요청은 같은 사이트의 API로만 전송할 수 있습니다.')
   const send = async (refresh: boolean) => {
     const headers: Record<string, string> = {}
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
+    if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json'
     if (protectedPath) {
       headers.Authorization = `Bearer ${await accessToken(refresh)}`
       if (owner !== auth?.currentUser?.uid) throw new Error('계정이 변경되었습니다. 다시 시도해 주세요.')
     }
     return fetch(url, {
-      method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
+      method, headers, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
     })
   }
   let response = await send(false)

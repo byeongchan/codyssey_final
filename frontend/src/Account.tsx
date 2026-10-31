@@ -5,7 +5,7 @@ import AccountDetails from './AccountDetails'
 import SignupForm from './SignupForm'
 import { auth, configurationError } from './firebase'
 import { useSession } from './session'
-import { Icon, PrizmMark } from './Icons'
+import { Icon, BrandMark } from './Icons'
 import { ApiRequestError, request, type Listing, type Product, type Single, type WishlistEntry, type WishlistState } from './api'
 
 const panel = 'rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow)]'
@@ -83,11 +83,11 @@ export function AccountPanel({ onClose, onLogout = onClose, presentation = 'dial
       }
     }} className="grid w-full max-w-[1180px] overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)] outline-none lg:grid-cols-[1.05fr_.95fr]">
       <section className="entry-hero relative overflow-hidden p-8 text-white sm:p-12">
-        <div className="relative z-10"><span className="mb-8 grid h-14 w-14 place-items-center rounded-2xl bg-white/10"><PrizmMark size={34}/></span><p className="text-sm font-bold text-emerald-200">PRIZM MEMBER</p><h2 className="mt-3 text-3xl font-black tracking-[-0.045em] sm:text-4xl">나만을 위한 가격 비교를<br/>시작해 보세요</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/65">관심 있는 상품의 판매 조건을 비교하고, 저장한 가격 관측과 AI 설명을 이어서 확인해 보세요.</p><div className="mt-10 grid grid-cols-3 gap-3">{['상품 비교', '가격 이력', 'AI 설명'].map(benefit => <div key={benefit} className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center text-xs font-bold">{benefit}</div>)}</div></div>
+        <div className="relative z-10"><span className="mb-8 grid h-14 w-14 place-items-center rounded-2xl bg-white/10"><BrandMark size={34}/></span><p className="text-sm font-bold text-emerald-200">줍줍각 멤버</p><h2 className="mt-3 text-3xl font-black tracking-[-0.045em] sm:text-4xl">나만을 위한 가격 비교를<br/>시작해 보세요</h2><p className="mt-5 max-w-md text-sm leading-6 text-white/65">관심 있는 상품의 판매 조건을 비교하고, 저장한 가격 관측과 AI 설명을 이어서 확인해 보세요.</p><div className="mt-10 grid grid-cols-3 gap-3">{['상품 비교', '가격 이력', 'AI 설명'].map(benefit => <div key={benefit} className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center text-xs font-bold">{benefit}</div>)}</div></div>
       </section>
       <section className="p-8 sm:p-12">
         <button disabled={busy} onClick={onClose} className="mb-10 flex items-center gap-1 text-xs font-bold text-[var(--muted)] transition hover:text-[var(--text)] disabled:opacity-50"><span className="rotate-180"><Icon name="arrow" size={14}/></span>{page ? '상품 둘러보기' : '닫기'}</button>
-        <h1 id="account-title" className="text-2xl font-black tracking-tight">{showSignup ? '회원가입' : user ? '내 정보' : resetPassword ? '비밀번호 찾기' : '로그인'}</h1><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{showSignup ? '가입 정보 입력과 이메일 인증을 이 화면에서 완료해 주세요.' : user ? 'PRIZM 계정 정보를 확인하고 관리하세요.' : 'PRIZM 계정으로 나의 가격 비교를 이어가세요.'}</p>
+        <h1 id="account-title" className="text-2xl font-black tracking-tight">{showSignup ? '회원가입' : user ? '내 정보' : resetPassword ? '비밀번호 찾기' : '로그인'}</h1><p className="mt-2 text-sm leading-6 text-[var(--muted)]">{showSignup ? '가입 정보 입력과 이메일 인증을 이 화면에서 완료해 주세요.' : user ? '줍줍각 계정 정보를 확인하고 관리하세요.' : '줍줍각 계정으로 나의 가격 비교를 이어가세요.'}</p>
         <div className="mt-8">
             {ready && !user && !resetPassword && <div role="group" aria-label="인증 방식 선택" className="mb-7 grid grid-cols-2 rounded-2xl bg-[var(--surface-2)] p-1">{[false, true].map(signup => <button key={String(signup)} type="button" disabled={busy} aria-pressed={register === signup} onClick={() => { setRegister(signup); setPassword(''); setError(''); setNotice('') }} className={`rounded-xl px-4 py-2.5 text-xs font-black transition disabled:opacity-50 ${register === signup ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--muted)]'}`}>{signup ? '회원가입' : '로그인'}</button>)}</div>}
           {!ready ? <p role="status" className="py-8 text-center text-sm text-[var(--muted)]">로그인 확인 중…</p> : showSignup ? <>
@@ -101,7 +101,7 @@ export function AccountPanel({ onClose, onLogout = onClose, presentation = 'dial
             <form onSubmit={submit} className="space-y-3">
               <label className="block"><span className="sr-only">이메일</span><input name="email" type="email" autoComplete="email" required placeholder="이메일" value={email} onChange={event => setEmail(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>
               {!resetPassword && <label className="block"><span className="sr-only">비밀번호</span><input name="password" type="password" minLength={6} autoComplete="current-password" required placeholder="비밀번호" value={password} onChange={event => setPassword(event.target.value)} disabled={busy || !auth} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3.5 text-sm outline-none focus:border-[var(--primary)] disabled:opacity-60"/></label>}
-              <button disabled={busy || !auth} className="w-full rounded-2xl bg-[var(--primary)] px-5 py-3.5 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">{busy ? '처리 중…' : resetPassword ? '재설정 메일 받기' : 'PRIZM 로그인'}</button>
+              <button disabled={busy || !auth} className="w-full rounded-2xl bg-[var(--primary)] px-5 py-3.5 text-sm font-black text-white transition hover:brightness-110 disabled:opacity-60">{busy ? '처리 중…' : resetPassword ? '재설정 메일 받기' : '줍줍각 로그인'}</button>
             </form>
             {!register && <button type="button" disabled={busy} onClick={() => { setResetPassword(previous => !previous); setPassword(''); setError(''); setNotice('') }} className="mt-4 text-xs font-bold text-[var(--primary)] disabled:opacity-50">{resetPassword ? '로그인으로 돌아가기' : '비밀번호를 잊으셨나요?'}</button>}
           </>}

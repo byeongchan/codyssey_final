@@ -61,6 +61,6 @@ public class MemberProfileController {
         var user=admins.requireAdmin(authorization);
         var doc=PersonalData.await(firebase.firestore().collection("users").document(user.uid()).get());
         if(doc.getString("deletionState")!=null) throw new ResponseStatusException(HttpStatus.CONFLICT,"계정 삭제가 진행 중입니다");
-        return response(Map.of("role","ADMIN","verified",true,"communityModerationImplemented",false));
+        return response(Map.of("role","ADMIN","verified",true,"communityModerationImplemented",true));
     }
 }

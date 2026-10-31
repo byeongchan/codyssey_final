@@ -10,11 +10,14 @@ import PriceAgentChat from './PriceAgentChat'
 import MallPrices, { type Offer } from './MallPrices'
 import { WishlistButton } from './LiveWishlist'
 import { rememberRecentProduct } from './recentProducts'
+import ProductSearchFilters from './ProductSearchFilters'
+import { combineSearchTerms, danawaFilterRequest, emptyProductFilters, type ProductFilters } from './productFilters'
 
-export type DanawaSearch = { query: string; revision: number; categoryId?: string; browseCategory?: boolean }
+export type DanawaSearch = { query: string; revision: number; categoryId?: string; browseCategory?: boolean; musinsaCategory?: string; musinsaGender?: 'all' | 'men' | 'women'; navigationId?: string; navigationGroup?: string; navigationItem?: string }
 
 type Variant = { productId: string; label: string; listedPrice: number | null }
-type Item = { productId: string; title: string; image?: string | null; displayUpdatedAt?: string | null; displayReceivedAt?: string | null; listedPrice: number | null; maker: string | null; category: string | null; variants: Variant[] }
+type Item = { productId: string; title: string; image?: string | null; displayUpdatedAt?: string | null; displayReceivedAt?: string | null; listedPrice: number | null; maker: string | null; makerCode?: string | null; category: string | null; variants: Variant[] }
+type SearchBody = { query: string; page: number; categoryId?: string; maker?: string; minPrice?: number; maxPrice?: number; sort?: string }
 type Product = { productId: string; title: string; image?: string | null; images?: string[]; maker: string | null; brand: string | null; intro: string | null; status: string | null; url: string; lowestPrice: number | null; lowestPriceWithShipping: number | null; cashLowestPrice: number | null; priceMismatch: boolean; offerCount: number | null; rating: number | null; reviewCount: number | null; variantProductIds: string[] }
 type Result = { source: 'reef-danawa'; synthetic: false; fetchedAt: string | null; receivedAt: string; localCacheHit: boolean; browserCacheSavedAt?: number; savedCatalogue?: boolean; displayMeta?: Meta; hasMore: boolean; page: number; items: Item[] | null; product: Product | null; offers: Offer[] | null }
 function validSearch(value: unknown): value is Result {
@@ -47,6 +50,17 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
   const [searched, setSearched] = useState('')
   const [result, setResult] = useState<Result | null>(null)
   const [listPage, setListPage] = useState(1)
+  const [filters, setFilters] = useState<ProductFilters>(emptyProductFilters)
+  const filterState = useRef({ category: '', filters: emptyProductFilters() })
+  const lastSearch = useRef<SearchBody | null>(null)
+  const filterCategory = searchRequest?.categoryId ?? ''
+  const filterContext = [filterCategory, searchRequest?.navigationGroup, searchRequest?.navigationItem].join(':')
+  function filterRequest(next: ProductFilters) {
+    const group = searchRequest?.navigationGroup || next.classificationGroup
+    const item = searchRequest?.navigationItem || next.classificationItem
+    const baseQuery = item && (searchRequest?.browseCategory || searchRequest?.query === searchRequest?.navigationGroup) ? '' : searchRequest?.query ?? query
+    return danawaFilterRequest(baseQuery, filterCategory, { ...next, classificationGroup: group, classificationItem: item })
+  }
   const listTop = useRef<HTMLElement | null>(null)
   useEffect(() => setListPage(1), [result])
   const [detail, setDetail] = useState<Result | null>(null)
@@ -73,12 +87,18 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
   useEffect(() => {
     if (!searchRequest) return
     setQuery(searchRequest.query); setSearched(searchRequest.query)
-    const timer = setTimeout(() => void load('search', { query: searchRequest.query, page: 1, categoryId: searchRequest.categoryId ?? '' }, false, searchRequest.browseCategory), 350)
+    const selectedFilters = filterState.current.category === filterContext ? filterState.current.filters : emptyProductFilters()
+    filterState.current = { category: filterContext, filters: selectedFilters }; setFilters(selectedFilters)
+    const body = filterRequest(selectedFilters)
+    if(body.query.length > 100) { setError('브랜드·상세 조건과 검색어를 합쳐 100자 이내로 입력해 주세요.'); return }
+    const narrowed = body.query !== searchRequest.query.trim().replace(/\s+/g, ' ') || Object.keys(body).some(key => ['maker', 'minPrice', 'maxPrice', 'sort'].includes(key))
+    const timer = setTimeout(() => void load('search', body, false, searchRequest.browseCategory && !narrowed), 350)
     return () => clearTimeout(timer)
   }, [searchRequest])
   useEffect(() => {
     function restore() {
       active.current?.abort(); locked.current = false; setBusy(false); setError('')
+      if(new URLSearchParams(location.search).get('provider') === 'musinsa') return
       const productId = new URLSearchParams(location.search).get('product')
       if (productId && /^[0-9]{1,30}$/.test(productId)) select(productId, false)
       else returnToList(false)
@@ -111,6 +131,8 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
     const abort = new AbortController(); active.current?.abort(); active.current = abort
     setBusy(true); setError(''); setImages(productImages()); setCollectionNotice(''); setCollectionPending(false)
     if (action === 'search') {
+      lastSearch.current = body as SearchBody
+      setSearched((body as SearchBody).query)
       const url = new URL(location.href); url.searchParams.delete('product'); history.replaceState(null, '', url)
       setResult(null); setDetail(null); setOffers(null); setSelected('');
     }
@@ -134,6 +156,7 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
         setResult(displayed)
         const input = body as { query: string; page: number; categoryId?: string }
         if (validSearch(response.data) && response.meta.collectionState !== 'COLLECTING'
+          && !Object.keys(input).some(key => ['maker', 'minPrice', 'maxPrice', 'sort'].includes(key))
           && (!response.meta.cacheExpiresAt || Date.parse(response.meta.cacheExpiresAt) > Date.now())) saveSearch(input.query, input.page, displayed, input.categoryId)
         rememberSearch(input.query)
       }
@@ -213,7 +236,8 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
   }
   function search(event: FormEvent) {
     event.preventDefault(); if (locked.current) return
-    setSearched(query.trim()); void load('search', { query: query.trim(), page: 1 })
+    const normalizedQuery = combineSearchTerms(query)
+    setSearched(normalizedQuery); void load('search', { query: normalizedQuery, page: 1 })
   }
   const pageCount = Math.max(1, Math.ceil((result?.items?.length ?? 0) / 12))
   const currentPage = Math.min(listPage, pageCount)
@@ -223,7 +247,17 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
     listTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
   const product = detail?.product
+  function applyFilters(next: ProductFilters) {
+    const body = filterRequest(next)
+    if(!body.query || body.query.length > 100) { setError('브랜드·상세 조건과 검색어를 합쳐 1~100자로 입력해 주세요.'); return }
+    filterState.current = { category: filterContext, filters: next }; setFilters(next)
+    void load('search', body)
+  }
+  function searchPage(page: number): SearchBody {
+    return { ...(lastSearch.current ?? { query: searched, categoryId: filterCategory }), page }
+  }
   return <section className="space-y-5">
+    {!selected && ['pc', 'digital', 'hobby', 'fashion'].includes(filterCategory) && <ProductSearchFilters categoryId={filterCategory} navigationGroup={searchRequest?.navigationGroup} navigationItem={searchRequest?.navigationItem} provider="danawa" applied={filters} discoveredBrands={(result?.items ?? []).map(item => ({ label: item.maker ?? '', code: item.makerCode ?? undefined }))} disabled={busy} onApply={applyFilters}/>}
     <div className={embedded ? 'mb-4' : card}>
       {selected ? <div><button disabled={busy} onClick={() => returnToList()} className="mb-4 flex items-center gap-2 text-xs font-bold text-[var(--muted)] disabled:opacity-50"><span className="rotate-180"><Icon name="arrow" size={14}/></span>상품 목록으로</button><p className="text-sm font-extrabold text-[var(--mint)]">AI PRICE REPORT</p><h1 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">선택한 상품, 더 깊게 비교했어요</h1><p className="mt-2 text-sm text-[var(--muted)]">가격과 판매 조건, 저장한 관측을 한 화면에서 확인하세요.</p>{error && <button disabled={busy} onClick={() => void load('product', { productId: selected })} className="mt-3 text-sm underline">상품 상세 다시 불러오기</button>}</div> : embedded ? <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="mb-1 flex items-center gap-2 text-sm font-extrabold text-[var(--mint)]"><Icon name="sparkles" size={16}/>{homePreview ? 'PRICE PICK' : 'PRICE COMPARISON'}</p><h2 className="text-xl font-black tracking-tight sm:text-2xl">{homePreview ? '최근 비교한 상품' : searched ? searched + ' 검색 결과' : '관심 있는 상품을 찾아보세요'}</h2><p className="mt-2 text-xs leading-5 text-[var(--muted)]">{searched ? '판매처별 표시 가격과 옵션을 비교해 보세요.' : '상단 검색창이나 카테고리를 선택하면 실제 상품을 조회합니다.'}</p></div></div> : <>
       <h1 className="text-xl font-black">다나와 상품·판매처 조회</h1>
@@ -236,7 +270,7 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
     {embedded && !selected && !result && !busy && !error && !collectionPending && <div className={`${card} grid min-h-48 place-items-center text-center`}><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--mint-soft)] text-[var(--mint)]"><Icon name="search" size={26}/></span><p className="mt-4 font-bold">어떤 상품을 비교해 볼까요?</p><p className="mt-2 text-sm text-[var(--muted)]">검색 전에는 상품과 가격을 임의로 표시하지 않습니다.</p></div></div>}
     {result && !selected && <article ref={listTop} className="min-w-0 scroll-mt-44">
       <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-[var(--muted)]">{homePreview ? `${searched} · 최근 검색 결과` : '상품 비교 결과'}</p><span className="text-[11px] text-[var(--subtle)]">총 {result.items?.length ?? 0}개 · {currentPage} / {pageCount}페이지</span></div>
-      <div className="mt-3 flex items-center justify-end"><button type="button" disabled={busy} aria-label="결과 새로고침" title="결과 새로고침" onClick={() => void load('search', { query: searched, page: result.page, categoryId: searchRequest?.categoryId ?? '' }, true)} className="grid h-9 w-9 place-items-center rounded-full text-[var(--primary)] transition hover:bg-[var(--surface-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:opacity-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button></div>
+      <div className="mt-3 flex items-center justify-end"><button type="button" disabled={busy} aria-label="결과 새로고침" title="결과 새로고침" onClick={() => void load('search', searchPage(result.page), true)} className="grid h-9 w-9 place-items-center rounded-full text-[var(--primary)] transition hover:bg-[var(--surface-2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--primary)] disabled:opacity-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M6.1 7a7 7 0 0 1 11.6-1L20 9M4 15l2.3 3A7 7 0 0 0 17.9 17"/></svg></button></div>
       <p className="mt-2 text-xs text-[var(--muted)]">카드에는 검색 응답의 옵션을 포함한 최저 표시가 하나만 표시합니다. 배송비는 별도이며, 상세에서 해당 가격의 옵션과 결제 조건을 확인하세요.</p>
       {!result.items?.length && <p className="mt-4">카탈로그 상품이 없습니다.</p>}
       <ul className="mt-4 grid gap-4 sm:grid-cols-3">{visibleItems.map(item => {
@@ -250,8 +284,8 @@ export default function DanawaPage({ onLogin, embedded = false, homePreview = fa
         <button type="button" disabled={busy || currentPage === pageCount} onClick={() => changeListPage(currentPage + 1)} className="rounded-xl border border-[var(--line)] px-3 py-2 text-sm disabled:opacity-40">다음</button>
       </nav>}
       {currentPage === pageCount && <div className="mt-4 flex justify-center gap-4">
-        {!result.savedCatalogue && result.page > 1 && <button type="button" disabled={busy} onClick={() => void load('search', { query: searched, page: result.page - 1, categoryId: searchRequest?.categoryId ?? '' })} className="text-sm text-[var(--primary)] underline disabled:opacity-50">이전 검색 결과 불러오기</button>}
-        {result.hasMore && result.page < 50 && <button type="button" disabled={busy} onClick={() => void load('search', { query: searched, page: result.page + 1, categoryId: searchRequest?.categoryId ?? '' })} className="text-sm text-[var(--primary)] underline disabled:opacity-50">추가 검색 결과 불러오기</button>}
+        {!result.savedCatalogue && result.page > 1 && <button type="button" disabled={busy} onClick={() => void load('search', searchPage(result.page - 1))} className="text-sm text-[var(--primary)] underline disabled:opacity-50">이전 검색 결과 불러오기</button>}
+        {result.hasMore && result.page < 50 && <button type="button" disabled={busy} onClick={() => void load('search', searchPage(result.page + 1))} className="text-sm text-[var(--primary)] underline disabled:opacity-50">추가 검색 결과 불러오기</button>}
       </div>}
     </article>}
     {product && detail && <article className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]">

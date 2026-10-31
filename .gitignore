@@ -1,6 +1,7 @@
 node_modules/
 dist/
 target/
+backend/api/data/community-images/
 .venv/
 __pycache__/
 *.pyc
@@ -33,3 +34,5 @@ application-secrets.yml
 application-secrets.yaml
 사이트/
 사이트2/
+중고최저가_구성화면/
+당근 마켓 리전 코드/

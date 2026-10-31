@@ -1,5 +1,8 @@
 {
   "indexes": [
+    { "collectionGroup": "communityPosts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "deleted", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "communityPosts", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "kind", "order": "ASCENDING" }, { "fieldPath": "deleted", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "communityComments", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "postId", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "ASCENDING" }] },
     {
       "queryScope": "COLLECTION",
       "fields": [

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { request, type Analysis, type AnalysisJob, type Category, type Listing, type Offer, type Prices, type Product, type Single } from './api'
-import { Icon, PrizmMark } from './Icons'
+import { Icon, BrandMark } from './Icons'
 import { mockupCategories, mockupImages } from './presentation'
 import { AccountPanel, WishlistButton, WishlistPage } from './Account'
 import { useSession } from './session'
@@ -146,7 +146,7 @@ function Detail({ id, onLogin, onNotifications }: { id: string; onLogin: () => v
       </div>
       <aside className="xl:sticky xl:top-28 xl:self-start">
         <article className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
-          <div className="ai-header flex items-center gap-3 px-6 py-5 text-white"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/15 backdrop-blur"><Icon name="sparkles" size={20}/></div><div><p className="text-sm font-black">PRIZM AI 구매 비서</p><p className="mt-1 text-[10px] text-white/60">서버 규칙 판단 · 설명 출처는 결과에 표시</p></div><span className="ml-auto rounded-full border border-white/15 px-2 py-1 text-[9px] font-bold">BETA</span></div>
+          <div className="ai-header flex items-center gap-3 px-6 py-5 text-white"><div className="grid h-10 w-10 place-items-center rounded-2xl bg-white/15 backdrop-blur"><Icon name="sparkles" size={20}/></div><div><p className="text-sm font-black">줍줍각 AI 구매 비서</p><p className="mt-1 text-[10px] text-white/60">서버 규칙 판단 · 설명 출처는 결과에 표시</p></div><span className="ml-auto rounded-full border border-white/15 px-2 py-1 text-[9px] font-bold">BETA</span></div>
           <div className="p-6">
           {!user ? <div className="mt-5 text-sm"><p>로그인하면 구매 타이밍 분석을 요청할 수 있습니다.</p><button onClick={onLogin} className="mt-3 font-bold text-[var(--primary)]">로그인하고 분석하기</button></div> : analysis && evidenceVersion && analysisEvidenceVersion && evidenceVersion !== analysisEvidenceVersion ? <div role="alert" className="mt-5 text-sm"><p>분석 중 가격 근거가 바뀌었습니다. 같은 근거로 상품과 분석을 다시 불러와 주세요.</p><button onClick={() => { setRetry(value => value + 1); setAiRetry(value => value + 1) }} className="mt-2 underline">상품·분석 다시 불러오기</button></div> : aiError ? <div role="alert" className="mt-5"><p>{aiError}</p><button onClick={() => setAiRetry(x => x + 1)} className="mt-2 text-sm underline">분석 다시 시도</button></div> : !analysis ? <p role="status" aria-live="polite" className="mt-5">{aiStatus === 'QUEUED' ? '분석 순서를 기다리고 있습니다…' : aiStatus === 'RUNNING' ? '구매 타이밍을 분석하고 있습니다…' : '분석을 요청하고 있습니다…'}</p> : <>
             <p role="status" className="mt-3 text-xs text-[var(--muted)]">{cacheHit ? '기존 분석 결과를 불러왔습니다.' : '분석이 완료되었습니다.'}</p>
@@ -214,7 +214,7 @@ export default function App() {
   return <div className={`app min-h-screen bg-[var(--bg)] text-[var(--text)] ${dark ? 'dark' : ''}`}>
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[color:var(--header)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-5 px-5 py-4 lg:px-8">
-        <button onClick={() => navigate(new URLSearchParams())} aria-label="PRIZM 홈" className="flex shrink-0 items-center gap-2"><span className="logo-symbol"><PrizmMark size={31}/></span><span className="text-xl font-black tracking-[-0.06em] sm:text-2xl">PRIZM</span></button>
+        <button onClick={() => navigate(new URLSearchParams())} aria-label="줍줍각 홈" className="flex shrink-0 items-center gap-2"><span className="logo-symbol"><BrandMark size={40}/></span><span className="text-xl font-black tracking-[-0.06em] sm:text-2xl">줍줍각</span></button>
         <form onSubmit={submit} className="relative order-3 mx-auto w-full md:order-none md:flex-1 md:max-w-2xl">
           <Icon name="search" size={19}/>
           <input aria-label="상품 검색" placeholder="어떤 상품의 최저가를 찾고 계세요?" value={query} onChange={e => setQuery(e.target.value)} className="w-full rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] py-3.5 pl-12 pr-24 text-sm outline-none transition focus:border-[var(--mint)] focus:ring-4 focus:ring-[var(--mint-glow)]"/>
@@ -267,10 +267,10 @@ export default function App() {
     <footer className="mt-20 border-t border-[var(--line)] bg-[var(--surface)]">
       <div className="mx-auto max-w-[1440px] px-5 py-10 lg:px-8">
         <div className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
-          <div><button onClick={() => navigate(new URLSearchParams())} aria-label="PRIZM 홈으로 이동" className="flex items-center gap-2"><span className="logo-symbol"><PrizmMark size={30}/></span><span className="text-lg font-black tracking-[-0.05em]">PRIZM</span></button><p className="mt-3 max-w-sm text-xs leading-5 text-[var(--muted)]">여러 쇼핑몰의 가격과 리뷰를 AI로 분석해 더 나은 구매 결정을 돕는 스마트 가격 비교 서비스입니다.</p><p className="mt-5 flex items-center gap-1.5 text-[10px] text-[var(--subtle)]"><Icon name="shield" size={13}/>현재는 더미 데이터 기반 개발용 데모입니다.</p></div>
+          <div><button onClick={() => navigate(new URLSearchParams())} aria-label="줍줍각 홈으로 이동" className="flex items-center gap-2"><span className="logo-symbol"><BrandMark size={36}/></span><span className="text-lg font-black tracking-[-0.05em]">줍줍각</span></button><p className="mt-3 max-w-sm text-xs leading-5 text-[var(--muted)]">여러 쇼핑몰의 가격과 리뷰를 AI로 분석해 더 나은 구매 결정을 돕는 스마트 가격 비교 서비스입니다.</p><p className="mt-5 flex items-center gap-1.5 text-[10px] text-[var(--subtle)]"><Icon name="shield" size={13}/>현재는 더미 데이터 기반 개발용 데모입니다.</p></div>
           <div><button onClick={() => navigate(new URLSearchParams({ view: 'danawa' }))} className="mb-4 mr-4 text-xs font-bold text-[var(--primary)]">다나와 실조회</button><button onClick={() => navigate(new URLSearchParams({ view: 'operations' }))} className="mb-4 text-xs font-bold text-[var(--primary)]">로컬 운영 상태</button><p className="mb-4 text-xs font-black">데이터·분석 연동 예정</p><div className="flex flex-wrap gap-2">{['ReefAPI', 'Gemini'].map(provider => <span key={provider} className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-[10px] font-extrabold text-[var(--muted)]">{provider}</span>)}</div></div>
         </div>
-        <div className="mt-9 border-t border-[var(--line)] pt-6 text-[10px] text-[var(--subtle)]">© 2026 PRIZM. All rights reserved.</div>
+        <div className="mt-9 border-t border-[var(--line)] pt-6 text-[10px] text-[var(--subtle)]">© 2026 줍줍각. All rights reserved.</div>
       </div>
     </footer>
   </div>

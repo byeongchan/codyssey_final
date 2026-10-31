@@ -95,3 +95,18 @@ test('bad input, request budget, upstream errors and body limits do not retry', 
   const large = new DanawaProvider({ key: 'test', fetcher: async () => new Response('x'.repeat(1024 * 1024 + 1)) });
   await assert.rejects(large.read('product', { productId: pid }), error => error.status === 502);
 });
+
+test('manufacturer, price and sort filters are forwarded and isolated in cache keys', async () => {
+  const calls = [];
+  const provider = new DanawaProvider({ key: 'test', fetcher: async (url, options) => {
+    calls.push(JSON.parse(options.body));
+    return new Response(JSON.stringify(envelope('search', { results: [], has_more: false })));
+  } });
+  const input = { query: 'SSD', maker: '702', minPrice: 0, maxPrice: 300000, sort: 'price_asc', page: 1 };
+  await provider.read('search', input);
+  assert.deepEqual(calls[0], { query: 'SSD', scope: 'catalog', sort: 'price_asc', page: 1, maker: '702', min_price: 0, max_price: 300000 });
+  await provider.read('search', { ...input, maxPrice: 200000 }); assert.equal(calls.length, 2);
+  await assert.rejects(provider.read('search', { ...input, minPrice: 400000 }), error => error.status === 400);
+  await assert.rejects(provider.read('search', { ...input, maker: 'Samsung' }), error => error.status === 400);
+  assert.equal(calls.length, 2);
+});

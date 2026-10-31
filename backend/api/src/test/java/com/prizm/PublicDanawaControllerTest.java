@@ -30,6 +30,14 @@ class PublicDanawaControllerTest {
         assertEquals(401, assertThrows(ResponseStatusException.class, () -> privateController.capture("", mapper.readTree("{\"productId\":\"123\"}"))).getStatusCode().value());
         verifyNoInteractions(client, observations);
     }
+    @Test void manufacturerAndBudgetConditionsReachTheCollectorAndRejectInvalidRanges() throws Exception {
+        when(client.read(anyString(),anyMap())).thenReturn(mapper.readTree("{\"fetchedAt\":null,\"receivedAt\":\"2026-10-30T00:00:00Z\"}"));
+        controller.search(mapper.readTree("{\"query\":\"SSD\",\"categoryId\":\"pc\",\"maker\":\"702\",\"minPrice\":1000,\"maxPrice\":5000,\"sort\":\"price_asc\"}"));
+        verify(client).read("search",Map.of("query","SSD","categoryId","pc","page",1,"maker","702","minPrice",1000L,"maxPrice",5000L,"sort","price_asc"));
+        clearInvocations(client);
+        assertThrows(ResponseStatusException.class,()->controller.search(mapper.readTree("{\"query\":\"SSD\",\"minPrice\":5000,\"maxPrice\":1000}")));
+        verifyNoInteractions(client);
+    }
     @Test void priceHistoryUsesSharedCacheAndNeverWritesDailyObservations() throws Exception {
         var cache = mock(LiveDataCache.class);
         var browsing = new DanawaController(sessions, client, observations, "operator", cache);

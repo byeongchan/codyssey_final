@@ -72,9 +72,20 @@ public class DanawaController {
         String categoryId = body.has("categoryId") ? body.path("categoryId").asText() : "";
         if (body.has("categoryId") && !body.path("categoryId").isTextual()) throw invalid();
         DanawaCategories.validate(categoryId);
-        if (body.has("sort") && !"popular".equals(body.path("sort").asText())) throw invalid();
-        return read("search", categoryId.isBlank() ? Map.of("query", LiveDataCache.normalize(body.path("query").asText()), "page", page)
-            : Map.of("query", LiveDataCache.normalize(body.path("query").asText()), "page", page, "categoryId", categoryId));
+        var allowed=Set.of("query","categoryId","page","sort","maker","minPrice","maxPrice","refresh");
+        body.fieldNames().forEachRemaining(field->{if(!allowed.contains(field)) throw invalid();});
+        String sort=body.path("sort").asText("popular");
+        if(body.has("sort") && !body.path("sort").isTextual()) throw invalid();
+        if(!Set.of("popular","price_asc","price_desc","newest","most_reviewed").contains(sort)) throw invalid();
+        var input=new LinkedHashMap<String,Object>(); input.put("query",LiveDataCache.normalize(body.path("query").asText())); input.put("page",page);
+        if(!categoryId.isBlank()) input.put("categoryId",categoryId);
+        if(!"popular".equals(sort)) input.put("sort",sort);
+        if(body.has("maker")) {
+            if(!body.path("maker").isTextual() || !body.path("maker").asText().matches("[0-9]{1,20}")) throw invalid();
+            input.put("maker",body.path("maker").asText());
+        }
+        SearchFilterPolicy.prices(body,input);
+        return read("search",input,refresh(body));
     }
     @PostMapping("/danawa/product") public ResponseEntity<?> product(@RequestHeader(value="Authorization", defaultValue="") String token, @RequestBody JsonNode body) {
         authorize(token); return publicProduct(body);

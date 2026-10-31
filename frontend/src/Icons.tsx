@@ -144,30 +144,14 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   return <svg {...common}>{paths[name]}</svg>
 }
 
-export function PrizmMark({ size = 34 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 36 36"
-      fill="none"
-      aria-hidden="true"
-      className="prizm-mark"
-    >
-      <path d="M18 3.5 32 28H4L18 3.5Z" fill="currentColor" opacity=".18" />
-      <path d="M18 3.5 18 28H4L18 3.5Z" fill="currentColor" opacity=".75" />
-      <path d="M18 3.5 32 28H18V3.5Z" fill="currentColor" />
-      <path d="m18 12 5 8.8H18V12Z" fill="white" opacity=".92" />
-      <path
-        d="M8 31.5h20"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        opacity=".45"
-      />
-    </svg>
-  )
+export function BrandMark({ size = 40 }: { size?: number }) {
+  return <img
+    src={`${import.meta.env.BASE_URL}brand/buypick.png`}
+    width={size}
+    height={size}
+    alt=""
+    aria-hidden="true"
+    className="buypick-mark"
+    draggable={false}
+  />
 }
-
-
-
