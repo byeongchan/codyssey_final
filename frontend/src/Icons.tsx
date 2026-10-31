@@ -151,7 +151,7 @@ export function BrandMark({ size = 40 }: { size?: number }) {
     height={size}
     alt=""
     aria-hidden="true"
-    className="buypick-mark"
+    className="buypick-mark joopjoop-mark"
     draggable={false}
   />
 }

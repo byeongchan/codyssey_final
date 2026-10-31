@@ -1,5 +1,5 @@
 import type { IconName } from './Icons'
-import { mockupImages } from './presentation'
+const carouselImage = (name: string) => `${import.meta.env.BASE_URL}brand/${name}`
 
 // Visual reference: 사이트2/AI 기반 가격 비교 사이트 v3. Keep its category order and icons.
 export const site2Categories: { id: string; name: string; short: string; icon: IconName; query: string; description: string; keywords: string[] }[] = [
@@ -14,7 +14,7 @@ export const site2Categories: { id: string; name: string; short: string; icon: I
 
 export const site2Suggestions = ['에어팟 프로 3', '로봇청소기', '맥북 에어 M3', '닌텐도 스위치 2', '제습기']
 export const site2Slides = [
-  { status: '상품 · 판매처 가격 비교', eyebrow: '검색은 짧게, 비교는 깊게', title: '비교해서 찾는 오늘의', accent: '합리적인 가격', description: '관심 있는 상품의 표시 가격부터 배송비와 옵션까지, 한곳에서 확인해 보세요.', image: mockupImages.lifestyle },
-  { status: '직접 저장한 가격 관측 이력', eyebrow: '가격의 흐름을 한눈에', title: '데이터를 모아 찾는', accent: '구매의 타이밍', description: '저장한 실제 관측을 날짜별로 비교하고, 가격의 흐름을 차근차근 살펴보세요.', image: mockupImages.laptop },
-  { status: '저장된 관측에 대한 설명', eyebrow: '숫자 너머의 조건까지', title: '구매 전에 확인하는', accent: '실속 있는 선택', description: '표시가와 실제 결제 조건의 차이, 아직 확인되지 않은 정보를 함께 살펴보세요.', image: mockupImages.audio },
+  { status: '상품 · 판매처 가격 비교', eyebrow: '검색은 짧게, 비교는 깊게', title: '비교해서 찾는 오늘의', accent: '합리적인 가격', description: '관심 있는 상품의 표시 가격부터 배송비와 옵션까지, 한곳에서 확인해 보세요.', image: carouselImage('carousel-search-wide.png') },
+  { status: '직접 저장한 가격 관측 이력', eyebrow: '가격의 흐름을 한눈에', title: '데이터를 모아 찾는', accent: '구매의 타이밍', description: '저장한 실제 관측을 날짜별로 비교하고, 가격의 흐름을 차근차근 살펴보세요.', image: carouselImage('carousel-compare-wide.png') },
+  { status: '저장된 관측에 대한 설명', eyebrow: '숫자 너머의 조건까지', title: '구매 전에 확인하는', accent: '실속 있는 선택', description: '표시가와 실제 결제 조건의 차이, 아직 확인되지 않은 정보를 함께 살펴보세요.', image: carouselImage('carousel-pick-wide.png') },
 ]

@@ -1,10 +1,12 @@
 .category-navigation { position: relative; align-self: start; z-index: 35; min-width: 0; }
-.category-navigation-panel { border: 1px solid var(--line); border-radius: 24px; background: var(--surface); padding: 12px; box-shadow: var(--shadow); }
-.category-navigation-heading { width: 100%; padding: 8px 12px 12px; text-align: left; font-size: 14px; font-weight: 800; }
-.category-navigation-link { display: flex; width: 100%; align-items: center; gap: 12px; border-radius: 12px; padding: 10px 12px; text-align: left; color: var(--muted); font-size: 13px; font-weight: 700; transition: background-color .16s, color .16s; }
+.category-navigation-panel { border: 1px solid var(--line); border-radius: 28px; background: var(--surface); padding: 12px; box-shadow: var(--shadow); }
+.category-navigation-heading { position: relative; width: 100%; min-height: 132px; overflow: hidden; margin-bottom: 10px; padding: 20px 104px 20px 16px; border-radius: 20px; background: radial-gradient(circle at 82% 18%, var(--mint-glow), transparent 42%), linear-gradient(145deg, var(--surface-2), var(--surface)); text-align: left; font-size: 15px; font-weight: 900; }
+.category-navigation-heading::before { content: none; }
+.category-navigation-heading::after { position: absolute; right: 4px; bottom: 6px; width: 104px; height: 116px; background: url('/brand/category-joopjoop.png') center / contain no-repeat; filter: drop-shadow(0 8px 12px var(--primary-glow)); content: ''; pointer-events: none; }
+.category-navigation-link { display: flex; width: 100%; align-items: center; gap: 12px; border-radius: 14px; padding: 11px 12px; text-align: left; color: var(--muted); font-size: 13px; font-weight: 700; transition: background-color .16s, color .16s, transform .16s; }
 .category-navigation-link > svg { flex-shrink: 0; }
-.category-navigation-link:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
-.category-navigation-link.is-selected { background: var(--primary-glow); color: var(--primary); }
+.category-navigation-link:hover:not(:disabled) { background: var(--surface-2); color: var(--text); transform: translateX(3px); }
+.category-navigation-link.is-selected { background: var(--primary); color: white; box-shadow: 0 10px 22px var(--primary-glow); }
 .category-navigation button:disabled { opacity: .45; cursor: default; }
 .category-chevron { display: inline-flex; flex-shrink: 0; transition: transform .2s; }
 .category-chevron.is-expanded { transform: rotate(90deg); }
@@ -29,10 +31,12 @@
 .category-submenu-group[data-open=true] > .category-flyout { visibility: visible; pointer-events: auto; opacity: 1; transform: translateX(0); }
 .category-mobile-toggle { display: none; }
 @media (max-width: 1023px) {
-  .category-navigation { z-index: 35; }
+  .category-navigation { position: relative; top: auto; z-index: 35; }
   .category-mobile-toggle { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); font-size: 13px; font-weight: 700; }
-  .category-navigation-panel { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; max-height: min(70dvh, 640px); overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; box-shadow: var(--shadow-lg); }
+  .category-navigation-panel { display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; max-height: min(70dvh, 640px); overflow-y: auto; overscroll-behavior: contain; border-radius: 20px; box-shadow: var(--shadow-lg); }
   .category-navigation-panel.is-mobile-open { display: block; }
+  .category-navigation-heading { min-height: auto; padding: 12px; background: transparent; }
+  .category-navigation-heading::before, .category-navigation-heading::after { display: none; }
   .category-navigation-link { padding-block: 13px; }
   .category-submenu-label { padding-block: 12px; }
   .category-group-toggle { width: 42px; min-height: 42px; }
