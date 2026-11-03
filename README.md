@@ -33,6 +33,21 @@
 
 </details>
 
+## 저장소 및 개발 이력
+
+- **GitHub 저장소:** [byeongchan/codyssey_final](https://github.com/byeongchan/codyssey_final)
+- **주요 브랜치:** `main`
+- **커밋 이력:** [main 브랜치 커밋 목록](https://github.com/byeongchan/codyssey_final/commits/main/)
+
+아래 화면에는 기능 추가·디자인 개선·배포 설정·문서 정리·코드 품질 검사 구성의 변경 이력이 기록되어 있습니다. 작성자·작성 시점·커밋 메시지·커밋 ID를 함께 확인할 수 있습니다.
+
+<details>
+<summary>커밋 목록 화면</summary>
+
+![main 브랜치의 작성자·날짜·변경 내용·커밋 ID](docs/evidence/커밋목록.png)
+
+</details>
+
 ## 주요 기능
 
 - **상품 탐색:** 검색·카테고리 조회, 최근 검색·최근 본 상품
