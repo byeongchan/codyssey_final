@@ -1,0 +1,63 @@
+name: Code quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+            backend/collector/package-lock.json
+      - run: npm ci
+      - run: npm run quality:js
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: npm ci
+        working-directory: backend/collector
+      - run: npm test
+        working-directory: backend/collector
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -r requirements-quality.txt -r backend/ai/requirements-dev.txt
+      - run: python -m pre_commit validate-config
+      - run: python -m ruff check backend/ai deploy
+      - run: python -m ruff format --check backend/ai deploy
+      - run: python -m unittest discover -s tests
+        working-directory: backend/ai
+        env:
+          APP_ENV: development
+          AI_PROVIDER: fixture
+          INTERNAL_API_KEY: ci-internal-key-not-a-production-secret
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B spotless:check test
+        working-directory: backend/api

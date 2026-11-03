@@ -10,7 +10,13 @@
 }
 
 .service-footer {
-  font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family:
+    'Pretendard',
+    'Noto Sans KR',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
 }
 
 * {
@@ -58,7 +64,9 @@ button {
   --artwork-line: #d9d9ef;
   --shadow: 0 10px 30px rgba(43, 35, 112, 0.07);
   --shadow-lg: 0 24px 60px rgba(35, 27, 101, 0.15);
-  transition: background-color 180ms ease, color 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
 }
 
 .app.dark {
@@ -105,12 +113,13 @@ button {
 .app {
   background:
     radial-gradient(circle at 8% 8%, rgba(81, 79, 245, 0.07), transparent 24rem),
-    radial-gradient(circle at 90% 24%, rgba(79, 224, 182, 0.08), transparent 28rem),
-    var(--bg);
+    radial-gradient(circle at 90% 24%, rgba(79, 224, 182, 0.08), transparent 28rem), var(--bg);
 }
 
 .app > header {
-  box-shadow: 0 1px 0 rgba(81, 79, 245, 0.04), 0 10px 36px rgba(35, 27, 101, 0.04);
+  box-shadow:
+    0 1px 0 rgba(81, 79, 245, 0.04),
+    0 10px 36px rgba(35, 27, 101, 0.04);
 }
 
 /* Reference theme mapped to the live site's existing markup; no behavior selectors changed. */
@@ -149,11 +158,16 @@ button {
 }
 
 .service-footer {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-2), transparent 20%), var(--surface));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--surface-2), transparent 20%),
+    var(--surface)
+  );
 }
 
 .app .used-hero {
-  background: radial-gradient(circle at 82% 20%, rgba(101, 239, 197, 0.26), transparent 38%),
+  background:
+    radial-gradient(circle at 82% 20%, rgba(101, 239, 197, 0.26), transparent 38%),
     linear-gradient(125deg, #21126c 12%, #4b48e5 75%, #177f71 130%);
   box-shadow: var(--shadow);
 }
@@ -175,7 +189,9 @@ button {
 }
 
 @media (max-width: 640px) {
-  .site2 > header > div:first-child { min-height: auto; }
+  .site2 > header > div:first-child {
+    min-height: auto;
+  }
   .site2 > header > div:first-child > div:last-child {
     border: 0;
     background: transparent;
@@ -250,7 +266,12 @@ button {
 .app a,
 .app input,
 .app select {
-  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .app button:focus-visible,
@@ -294,7 +315,9 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .community-nav-button:hover:not(:disabled),
   .community-nav-button:focus-visible,
-  .community-nav-button:active:not(:disabled) { transform: none; }
+  .community-nav-button:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 form:has(> input) > svg {
@@ -329,7 +352,9 @@ form:has(> input) > svg {
   height: 220px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  box-shadow: 0 0 0 36px rgba(255, 255, 255, 0.02), 0 0 0 72px rgba(255, 255, 255, 0.015);
+  box-shadow:
+    0 0 0 36px rgba(255, 255, 255, 0.02),
+    0 0 0 72px rgba(255, 255, 255, 0.015);
 }
 
 .live-dot {
@@ -375,15 +400,21 @@ form:has(> input) > svg {
 }
 
 .mascot-carousel-primary {
-  background: radial-gradient(circle at 76% 12%, rgba(101, 239, 197, 0.22), transparent 36%), linear-gradient(120deg, #21126c, #4542d8);
+  background:
+    radial-gradient(circle at 76% 12%, rgba(101, 239, 197, 0.22), transparent 36%),
+    linear-gradient(120deg, #21126c, #4542d8);
 }
 
 .mascot-carousel-price {
-  background: radial-gradient(circle at 76% 12%, rgba(126, 171, 255, 0.28), transparent 36%), linear-gradient(120deg, #19145c, #3c61cd);
+  background:
+    radial-gradient(circle at 76% 12%, rgba(126, 171, 255, 0.28), transparent 36%),
+    linear-gradient(120deg, #19145c, #3c61cd);
 }
 
 .mascot-carousel-condition {
-  background: radial-gradient(circle at 76% 12%, rgba(101, 239, 197, 0.3), transparent 36%), linear-gradient(120deg, #24105f, #147d73);
+  background:
+    radial-gradient(circle at 76% 12%, rgba(101, 239, 197, 0.3), transparent 36%),
+    linear-gradient(120deg, #24105f, #147d73);
 }
 
 .artwork-carousel {
@@ -398,7 +429,13 @@ form:has(> input) > svg {
 }
 
 .artwork-carousel-shade {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.08) 66%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.88) 34%,
+    rgba(255, 255, 255, 0.08) 66%,
+    transparent 100%
+  );
 }
 
 .artwork-carousel-copy {
@@ -476,7 +513,10 @@ form:has(> input) > svg {
 }
 
 .site2 main article {
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .site2 main article:hover {
@@ -510,7 +550,10 @@ form:has(> input) > svg {
 .product-card {
   position: relative;
   box-shadow: 0 10px 28px rgba(43, 35, 112, 0.06);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
 }
 
 .product-card:hover {
@@ -539,7 +582,9 @@ form:has(> input) > svg {
 }
 
 .product-cta span:last-child {
-  transition: transform 180ms ease, background-color 180ms ease;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
 }
 
 .product-card:hover .product-cta span:last-child {
@@ -551,8 +596,11 @@ form:has(> input) > svg {
 .site-footer {
   position: relative;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--surface-2), transparent 20%), var(--surface));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--surface-2), transparent 20%),
+    var(--surface)
+  );
 }
 
 .footer-mascot {
@@ -618,8 +666,12 @@ form:has(> input) > svg {
 }
 
 @keyframes prizmLoadingSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -663,7 +715,13 @@ form:has(> input) > svg {
   }
 
   .artwork-carousel-shade {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.9) 48%, rgba(255, 255, 255, 0.2) 76%, transparent 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.98) 0%,
+      rgba(255, 255, 255, 0.9) 48%,
+      rgba(255, 255, 255, 0.2) 76%,
+      transparent 100%
+    );
   }
 
   .header-main {
@@ -700,15 +758,38 @@ form:has(> input) > svg {
 }
 
 /* 사이트2: home carousel, price signal and detail report layout. */
-.prizm-hero-track { transition: transform 0.6s ease-in-out; }
+.prizm-hero-track {
+  transition: transform 0.6s ease-in-out;
+}
 
-.recent-products-rail { display: none; }
-.recent-products-mobile { display: block; bottom: calc(16px + env(safe-area-inset-bottom)); }
-.floating-tools-menu { min-width: 200px; }
-.floating-tools-menu > button { display: block; width: 100%; padding: 12px; border-radius: 10px; text-align: left; font-size: 12px; font-weight: 700; }
-.floating-tools-menu > button:hover { background: var(--surface-2); color: var(--primary); }
+.recent-products-rail {
+  display: none;
+}
+.recent-products-mobile {
+  display: block;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.floating-tools-menu {
+  min-width: 200px;
+}
+.floating-tools-menu > button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+}
+.floating-tools-menu > button:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
 /* The shared shopping tools button opens either panel on small screens. */
-.app .price-agent-launcher, .app .used-agent-launcher { display: none; }
+.app .price-agent-launcher,
+.app .used-agent-launcher {
+  display: none;
+}
 
 @media (min-width: 1680px) {
   .recent-products-rail {
@@ -721,12 +802,18 @@ form:has(> input) > svg {
     overflow-y: auto;
     font-size: 11px;
   }
-  .recent-products-mobile { display: none; }
+  .recent-products-mobile {
+    display: none;
+  }
 }
 
 @keyframes prizmCarouselFill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .prizm-carousel-progress {
@@ -742,7 +829,9 @@ form:has(> input) > svg {
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
-.joop-carousel::before { display: none; }
+.joop-carousel::before {
+  display: none;
+}
 .joop-carousel .prizm-hero-track {
   width: 100%;
   min-width: 0;
@@ -771,22 +860,39 @@ form:has(> input) > svg {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent 55%);
   pointer-events: none;
 }
-.joop-carousel .prizm-hero-track > article > div:first-child { max-width: 49%; }
+.joop-carousel .prizm-hero-track > article > div:first-child {
+  max-width: 49%;
+}
 .joop-carousel h1,
-.joop-carousel h2 { color: #18154b; font-size: clamp(28px, 3vw, 44px); }
+.joop-carousel h2 {
+  color: #18154b;
+  font-size: clamp(28px, 3vw, 44px);
+}
 .joop-carousel h1 span,
-.joop-carousel h2 span { color: #514ff5; }
-.joop-carousel p { color: #67658a; }
+.joop-carousel h2 span {
+  color: #514ff5;
+}
+.joop-carousel p {
+  color: #67658a;
+}
 .joop-carousel .prizm-hero-track > article > div:first-child > div:first-child {
   color: #137e67;
   border-color: rgba(21, 155, 125, 0.18);
   background: rgba(255, 255, 255, 0.8);
 }
-.joop-carousel > [role="group"] button > span { background: rgba(81, 79, 245, 0.16); }
-.joop-carousel > [role="group"] button > span > span { background: #514ff5; }
+.joop-carousel > [role='group'] button > span {
+  background: rgba(81, 79, 245, 0.16);
+}
+.joop-carousel > [role='group'] button > span > span {
+  background: #514ff5;
+}
 @media (max-width: 640px) {
-  .joop-carousel .prizm-hero-track > article { min-height: 360px; }
-  .joop-carousel .prizm-hero-track > article > div:first-child { max-width: 100%; }
+  .joop-carousel .prizm-hero-track > article {
+    min-height: 360px;
+  }
+  .joop-carousel .prizm-hero-track > article > div:first-child {
+    max-width: 100%;
+  }
   .joop-carousel-image {
     inset: auto 0 0;
     width: 100%;
@@ -799,13 +905,19 @@ form:has(> input) > svg {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 60%);
   }
   .joop-carousel h1,
-  .joop-carousel h2 { font-size: 30px; }
-  .joop-carousel .prizm-hero-track > article > div:first-child > p:last-child { max-width: 90%; }
+  .joop-carousel h2 {
+    font-size: 30px;
+  }
+  .joop-carousel .prizm-hero-track > article > div:first-child > p:last-child {
+    max-width: 90%;
+  }
 }
 .ai-radar {
   position: relative;
   isolation: isolate;
-  background: radial-gradient(circle at 90% 0, rgba(52, 205, 168, .35), transparent 48%), linear-gradient(135deg, #17254d, #3045a0);
+  background:
+    radial-gradient(circle at 90% 0, rgba(52, 205, 168, 0.35), transparent 48%),
+    linear-gradient(135deg, #17254d, #3045a0);
 }
 .ai-radar::after {
   content: '';
@@ -814,18 +926,26 @@ form:has(> input) > svg {
   height: 320px;
   right: -100px;
   bottom: -200px;
-  border: 1px solid rgba(255, 255, 255, .15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  box-shadow: 0 0 0 32px rgba(255, 255, 255, .035), 0 0 0 64px rgba(255, 255, 255, .025);
+  box-shadow:
+    0 0 0 32px rgba(255, 255, 255, 0.035),
+    0 0 0 64px rgba(255, 255, 255, 0.025);
   z-index: -1;
 }
-.site2 button:disabled { cursor: default; }
-.site2 button:focus-visible, .site2 a:focus-visible, .site2 [tabindex]:focus-visible {
+.site2 button:disabled {
+  cursor: default;
+}
+.site2 button:focus-visible,
+.site2 a:focus-visible,
+.site2 [tabindex]:focus-visible {
   outline: 2px solid var(--mint);
   outline-offset: 4px;
 }
 @media (max-width: 640px) {
-  .prizm-hero-track > article { min-height: 360px; }
+  .prizm-hero-track > article {
+    min-height: 360px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .prizm-hero-track {

@@ -1,0 +1,8 @@
+**/node_modules/**
+**/dist/**
+**/target/**
+**/package-lock.json
+frontend/public/**
+frontend/src/assets/**
+docs/**
+*.md

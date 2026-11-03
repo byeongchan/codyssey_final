@@ -1,4 +1,5 @@
 """Extract source-backed listing attributes before the deterministic purchase analysis."""
+
 import json
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
@@ -51,14 +52,27 @@ class GeminiUsedExtraction(GeminiExplanationProvider):
     def extract(self, items):
         payload = {
             "systemInstruction": {"parts": [{"text": INSTRUCTIONS}]},
-            "contents": [{"role": "user", "parts": [{"text": json.dumps({"items": items}, ensure_ascii=False)}]}],
-            "generationConfig": {"responseMimeType": "application/json", "responseJsonSchema": ExtractionResult.model_json_schema(), "maxOutputTokens": 6000},
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": json.dumps({"items": items}, ensure_ascii=False)}],
+                }
+            ],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseJsonSchema": ExtractionResult.model_json_schema(),
+                "maxOutputTokens": 6000,
+            },
         }
         response = self.transport(payload)
         candidates = response.get("candidates", [])
         if len(candidates) != 1 or candidates[0].get("finishReason") != "STOP":
             raise ValueError("Incomplete extraction")
-        raw = "".join(part["text"] for part in candidates[0].get("content", {}).get("parts", []) if not part.get("thought") and isinstance(part.get("text"), str))
+        raw = "".join(
+            part["text"]
+            for part in candidates[0].get("content", {}).get("parts", [])
+            if not part.get("thought") and isinstance(part.get("text"), str)
+        )
         if len(raw) > 50000:
             raise ValueError("Extraction response limit")
         result = ExtractionResult.model_validate_json(raw)
@@ -73,6 +87,10 @@ class GeminiUsedExtraction(GeminiExplanationProvider):
                 if field.certainty == "UNKNOWN":
                     if field.value or field.quote:
                         raise ValueError("Unsupported unknown field")
-                elif not field.value.strip() or not field.quote.strip() or field.quote not in originals[item.id][field.source]:
+                elif (
+                    not field.value.strip()
+                    or not field.quote.strip()
+                    or field.quote not in originals[item.id][field.source]
+                ):
                     raise ValueError("Unsupported extraction quote")
         return result.model_dump()

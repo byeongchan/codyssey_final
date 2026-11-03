@@ -10,8 +10,14 @@ class RssSettingsTest(unittest.TestCase):
     def test_local_rss_overrides_stale_shell_without_exporting_other_values(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / ".env"
-            path.write_text('RSS_FEEDS_JSON=\'[{"name":"test","url":"https://www.yna.co.kr/rss/news.xml"}]\'\nRSS_ALLOWED_HOSTS=www.yna.co.kr,yna.co.kr\nUNRELATED_TEST_KEY=ignored\n', encoding="utf-8")
-            with patch("app.rss_settings.RSS_ENV_FILE", path), patch.dict(os.environ, {"RSS_FEEDS_JSON": "[]", "RSS_ALLOWED_HOSTS": ""}):
+            path.write_text(
+                'RSS_FEEDS_JSON=\'[{"name":"test","url":"https://www.yna.co.kr/rss/news.xml"}]\'\nRSS_ALLOWED_HOSTS=www.yna.co.kr,yna.co.kr\nUNRELATED_TEST_KEY=ignored\n',
+                encoding="utf-8",
+            )
+            with (
+                patch("app.rss_settings.RSS_ENV_FILE", path),
+                patch.dict(os.environ, {"RSS_FEEDS_JSON": "[]", "RSS_ALLOWED_HOSTS": ""}),
+            ):
                 feeds, hosts = rss_settings()
                 self.assertIn("news.xml", feeds)
                 self.assertIn("www.yna.co.kr", hosts)
@@ -26,7 +32,10 @@ class RssSettingsTest(unittest.TestCase):
 
     def test_absent_configuration_uses_selected_yonhap_feed(self):
         with tempfile.TemporaryDirectory() as directory:
-            with patch("app.rss_settings.RSS_ENV_FILE", Path(directory) / "missing"), patch.dict(os.environ, {}, clear=True):
+            with (
+                patch("app.rss_settings.RSS_ENV_FILE", Path(directory) / "missing"),
+                patch.dict(os.environ, {}, clear=True),
+            ):
                 feeds, hosts = rss_settings()
                 self.assertIn("https://www.yna.co.kr/rss/news.xml", feeds)
                 self.assertIn("www.yna.co.kr", hosts)

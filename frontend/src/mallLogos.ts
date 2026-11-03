@@ -38,7 +38,10 @@ for (const [logo, names] of [
 }
 
 function normalize(name: string) {
-  return name.normalize('NFKC').replace(/[\s._-]/g, '').toLowerCase()
+  return name
+    .normalize('NFKC')
+    .replace(/[\s._-]/g, '')
+    .toLowerCase()
 }
 
 export function mallLogo(name: string): string | undefined {

@@ -1,4 +1,5 @@
 """Used-listing chat: supplied snapshots only, no search tools or news enrichment."""
+
 import json
 import re
 from decimal import Decimal
@@ -44,7 +45,9 @@ sellerNotes에는 description에서 연속된 문장을 원문 그대로 인용�
 description이 없거나 질문에 관련이 없으면 sellerNotes는 빈 배열이다.
 """
 
-DETAIL_SYSTEM = (Path(__file__).parent / 'prompts' / 'used_detail.txt').read_text(encoding='utf-8') + """
+DETAIL_SYSTEM = (
+    (Path(__file__).parent / "prompts" / "used_detail.txt").read_text(encoding="utf-8")
+    + """
 
 [현재 구현의 데이터 계약 — 사실과 계산의 원본]
 유일한 실제 근거는 evidence다. 문서의 예시·기준 수치를 실제 상품 사실로 바꾸지 않는다.
@@ -90,6 +93,7 @@ sellerNotes는 선택 매물 description에 실제 포함된 짧은 문구만 �
 전화번호·계좌·정확한 주소·이메일은 답변에 출력하지 않는다. 데이터에 없으면 해석으로 채우지 않는다.
 JSON의 answer(4000자 이하), sellerNotes(최대5개)만 반환한다. 판단·통계 수치는 서버가 별도 표시한다.
 """
+)
 
 
 class GeminiUsedAgent(GeminiExplanationProvider):
@@ -97,31 +101,58 @@ class GeminiUsedAgent(GeminiExplanationProvider):
     response_timeout = 135.0
 
     def explain(self, evidence, question, history):
-        detail = evidence.get('mode') == 'detail'
+        detail = evidence.get("mode") == "detail"
         payload = {
             "systemInstruction": {"parts": [{"text": DETAIL_SYSTEM if detail else SYSTEM}]},
-            "contents": [{"role": "user", "parts": [{"text": json.dumps(
-                {"evidence": evidence, "question": question, "history": history}, ensure_ascii=False)}]}],
-            "generationConfig": {"responseMimeType": "application/json",
-                                 "responseJsonSchema": UsedAgentText.model_json_schema(), "maxOutputTokens": 3200 if detail else 1800},
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": json.dumps(
+                                {"evidence": evidence, "question": question, "history": history},
+                                ensure_ascii=False,
+                            )
+                        }
+                    ],
+                }
+            ],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseJsonSchema": UsedAgentText.model_json_schema(),
+                "maxOutputTokens": 3200 if detail else 1800,
+            },
         }
         response = self.transport(payload)
         candidates = response.get("candidates", [])
         if len(candidates) != 1 or candidates[0].get("finishReason") != "STOP":
             raise ValueError("Incomplete used-agent response")
-        raw = "".join(part["text"] for part in candidates[0].get("content", {}).get("parts", [])
-                      if not part.get("thought") and isinstance(part.get("text"), str))
+        raw = "".join(
+            part["text"]
+            for part in candidates[0].get("content", {}).get("parts", [])
+            if not part.get("thought") and isinstance(part.get("text"), str)
+        )
         if len(raw) > 20000:
             raise ValueError("Response limit")
         result = UsedAgentText.model_validate_json(raw)
         if not detail and len(result.answer) > 2000:
-            raise ValueError('Search answer limit')
+            raise ValueError("Search answer limit")
         description = evidence.get("product", {}).get("description") or ""
-        if not result.answer.strip() or any(not note.quote.strip() or note.quote not in description for note in result.sellerNotes):
+        if not result.answer.strip() or any(
+            not note.quote.strip() or note.quote not in description for note in result.sellerNotes
+        ):
             raise ValueError("Unsupported quotation")
         # No invented prices, percentages, model capacities or dates in the answer.
         numeric = r"\d+(?:\.\d+)?"
-        grounded = {Decimal(number) for number in re.findall(numeric, json.dumps(evidence, ensure_ascii=False).replace(",", ""))}
-        if any(Decimal(number) not in grounded for number in re.findall(numeric, result.answer.replace(",", ""))):
+        grounded = {
+            Decimal(number)
+            for number in re.findall(
+                numeric, json.dumps(evidence, ensure_ascii=False).replace(",", "")
+            )
+        }
+        if any(
+            Decimal(number) not in grounded
+            for number in re.findall(numeric, result.answer.replace(",", ""))
+        ):
             raise ValueError("Unsupported numeric claim")
         return result.model_dump()

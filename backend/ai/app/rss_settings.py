@@ -1,10 +1,13 @@
 """Read only explicitly selected settings; never evaluate dotenv text or export values."""
+
 import json
 import os
 from pathlib import Path
 
 RSS_ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
-DEFAULT_FEEDS = json.dumps([{"name": "연합뉴스", "url": "https://www.yna.co.kr/rss/news.xml"}], ensure_ascii=False)
+DEFAULT_FEEDS = json.dumps(
+    [{"name": "연합뉴스", "url": "https://www.yna.co.kr/rss/news.xml"}], ensure_ascii=False
+)
 DEFAULT_HOSTS = "www.yna.co.kr,yna.co.kr"
 
 

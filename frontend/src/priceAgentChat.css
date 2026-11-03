@@ -4,18 +4,29 @@
   height: min(720px, calc(100dvh - 190px));
   min-height: 0;
 }
-.price-agent-panel > * { flex-shrink: 0; }
+.price-agent-panel > * {
+  flex-shrink: 0;
+}
 .price-agent-panel > .chat-scroll {
   flex: 1 1 0;
   height: auto;
   min-height: 0;
   overflow-anchor: none;
 }
-.price-agent-panel > .ai-header { padding: 14px 16px; }
-.price-agent-panel > .border-t { padding: 12px; }
-.price-agent-launcher, .price-agent-close { display: none; }
+.price-agent-panel > .ai-header {
+  padding: 14px 16px;
+}
+.price-agent-panel > .border-t {
+  padding: 12px;
+}
+.price-agent-launcher,
+.price-agent-close {
+  display: none;
+}
 @media (max-width: 1279px) {
-  .price-agent-panel { display: none; }
+  .price-agent-panel {
+    display: none;
+  }
   .price-agent-panel.is-open {
     display: flex;
     position: fixed;

@@ -16,8 +16,12 @@ export const mockupCategories: { id: string; name: string; icon: IconName }[] = 
 
 // 사이트/src/App.tsx의 데모 이미지. 실제 상품 사진이 아닌 목업용 사진이다.
 export const mockupImages: Record<string, string> = {
-  audio: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=900&q=85',
-  laptop: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=900&q=85',
-  wearable: 'https://images.unsplash.com/photo-1648200076219-bc83229919ca?auto=format&fit=crop&w=900&q=85',
-  lifestyle: 'https://images.unsplash.com/photo-1721720671231-d3107662343f?auto=format&fit=crop&w=1400&q=85',
+  audio:
+    'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&w=900&q=85',
+  laptop:
+    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=900&q=85',
+  wearable:
+    'https://images.unsplash.com/photo-1648200076219-bc83229919ca?auto=format&fit=crop&w=900&q=85',
+  lifestyle:
+    'https://images.unsplash.com/photo-1721720671231-d3107662343f?auto=format&fit=crop&w=1400&q=85',
 }

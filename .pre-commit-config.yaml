@@ -1,0 +1,31 @@
+repos:
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        language: system
+        entry: node scripts/quality.mjs eslint
+        files: ^(frontend/.*\.tsx?$|backend/collector/.*\.mjs$|scripts/quality\.mjs$)
+      - id: prettier
+        name: Prettier
+        language: system
+        entry: node scripts/quality.mjs prettier
+        files: ^(frontend/(src/.*\.(tsx?|css)|vite\.config\.ts|tsconfig\.json|package\.json|vercel\.json)|backend/collector/(src/.*\.mjs|test/.*\.mjs|package\.json)|scripts/quality\.mjs|package\.json|eslint\.config\.mjs|\.prettierrc\.json|\.github/workflows/quality\.yml|\.pre-commit-config\.yaml)$
+      - id: ruff
+        name: Ruff lint
+        language: python
+        additional_dependencies: [ruff==0.14.3]
+        entry: ruff check
+        files: ^(backend/ai|deploy)/.*\.py$
+      - id: ruff-format
+        name: Ruff format
+        language: python
+        additional_dependencies: [ruff==0.14.3]
+        entry: ruff format --check
+        files: ^(backend/ai|deploy)/.*\.py$
+      - id: spotless
+        name: Spotless Java
+        language: system
+        entry: node scripts/quality.mjs java
+        files: ^backend/api/(src/.*\.java|pom\.xml)$
+        pass_filenames: false

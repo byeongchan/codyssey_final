@@ -1,22 +1,53 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from 'react'
 
-export type IconName = "bell" | "search" | "sparkles" | "moon" | "sun" | "user" | "heart" | "menu" | "home" | "laptop" | "headphones" | "watch" | "camera" | "kitchen" | "shirt" | "baby" | "car" | "arrow" | "trend" | "check" | "send" | "chevron" | "star" | "clock" | "shield" | "external"
+export type IconName =
+  | 'bell'
+  | 'search'
+  | 'sparkles'
+  | 'moon'
+  | 'sun'
+  | 'user'
+  | 'heart'
+  | 'menu'
+  | 'home'
+  | 'laptop'
+  | 'headphones'
+  | 'watch'
+  | 'camera'
+  | 'kitchen'
+  | 'shirt'
+  | 'baby'
+  | 'car'
+  | 'arrow'
+  | 'trend'
+  | 'check'
+  | 'send'
+  | 'chevron'
+  | 'star'
+  | 'clock'
+  | 'shield'
+  | 'external'
 
 export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const common = {
     width: size,
     height: size,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
     strokeWidth: 1.8,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true as const,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true as const,
   }
 
   const paths: Record<IconName, ReactNode> = {
-    bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></>,
+    bell: (
+      <>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" />
+        <path d="M10 21h4" />
+      </>
+    ),
     search: (
       <>
         <circle cx="11" cy="11" r="7" />
@@ -145,13 +176,15 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 }
 
 export function BrandMark({ size = 40 }: { size?: number }) {
-  return <img
-    src={`${import.meta.env.BASE_URL}brand/buypick.png`}
-    width={size}
-    height={size}
-    alt=""
-    aria-hidden="true"
-    className="buypick-mark joopjoop-mark"
-    draggable={false}
-  />
+  return (
+    <img
+      src={`${import.meta.env.BASE_URL}brand/buypick.png`}
+      width={size}
+      height={size}
+      alt=""
+      aria-hidden="true"
+      className="buypick-mark joopjoop-mark"
+      draggable={false}
+    />
+  )
 }
