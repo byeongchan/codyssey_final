@@ -1,8 +1,10 @@
+> **개발 이력 보관 문서** · 2026-11-03 분류. 작성 당시의 설명이며 현재 배포·기능 검증 상태를 나타내지 않습니다. 현재 문서는 [문서 인덱스](../README.md)를 참고하세요.
+
 # 1차 fixture 계약
 
-> 0.24.0: 로그인 전용 POST `/me/danawa/agent/{productId}/messages`, GET `/me/danawa/agent/jobs/{jobId}` 추가. 고정 안내 또는 근거 버전 기반 비동기 답변을 반환한다. 공개 jobs에서는 agent 결과를 읽을 수 없다. [가격 에이전트 계약·정책](PRICE-AGENT.md)을 우선 참고한다.
+> 0.24.0: 로그인 전용 POST `/me/danawa/agent/{productId}/messages`, GET `/me/danawa/agent/jobs/{jobId}` 추가. 고정 안내 또는 근거 버전 기반 비동기 답변을 반환한다. 공개 jobs에서는 agent 결과를 읽을 수 없다. [가격 에이전트 계약·정책](../PRICE-AGENT.md)을 우선 참고한다.
 
-> 실제 상세 확장 계약 0.22.0: 공개 POST `/danawa/price_history` 및 인증 POST `/me/danawa/review-summary/{productId}`를 추가했다. 후자는 직접 입력 리뷰만 분석하며 자동 수집이 아니다. [상세 계약·제한·검증 안내](DETAIL-INSIGHTS.md)를 참고한다.
+> 실제 상세 확장 계약 0.22.0: 공개 POST `/danawa/price_history` 및 인증 POST `/me/danawa/review-summary/{productId}`를 추가했다. 후자는 직접 입력 리뷰만 분석하며 자동 수집이 아니다. [상세 계약·제한·검증 안내](../DETAIL-INSIGHTS.md)를 참고한다.
 
 이 문서는 현재 구현된 범위만 설명한다. PRD의 전체 API는 목표이며 아직 전부 구현되지 않았다.
 

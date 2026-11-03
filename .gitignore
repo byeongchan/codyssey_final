@@ -40,3 +40,5 @@ application-secrets.yaml
 줍줍이/
 로그인 베이스 코드/
 ai 비교 사이트/
+.ruff_cache/
+.cache/pre-commit/

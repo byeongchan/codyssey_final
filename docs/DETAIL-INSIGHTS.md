@@ -10,7 +10,7 @@
 
 - 상세 진입 시 POST `/api/v1/danawa/price_history`에 `{ "productId": "선택한 상품 코드" }`를 전송한다. 로그인은 필요하지 않다.
 - Spring → Node 내부 수집기 → `POST https://api.reefapi.com/danawa/v1/price_history` 순서로 요청한다. 외부 본문은 `{ "product_id": "상품 코드" }`다. Reef 키는 Node에서만 사용한다.
-- 공유 Firestore 캐시는 6시간이다. 최초/만료 요청은 기존 분산 임대·비동기 수집·재시도·공개 작업 상태 경로를 이용한다. 같은 상품 상세를 반복 방문해도 유효 캐시를 재사용한다.
+- 현재 가격 이력 최신성 기본값은 1일이며 저장 자료를 유지한다. 미저장 최초 조회·명시적 갱신에서만 수집하며, 만료만으로 자동 재수집하지 않는다. [현재 갱신 정책](MANUAL-PRICE-REFRESH.md)이 이전 6시간 캐시 설명보다 우선한다.
 - 문서에 명시된 응답은 `product.product_id`, `currency=KRW`, `weekly[{date,lowest_price}]`, `monthly[{date,lowest_price}]`, `all_time_lowest`다. 이번 화면은 주간 최대 12개·월간 최대 24개 시계열만 사용한다. `all_time_lowest`를 제품 출시 이후의 확정 역대 최저가로 표시하지 않는다.
 - 원본 날짜와 null 가격을 보존하고 날짜순으로 표시한다. 값이 없는 표본을 연결하거나 오늘 가격을 과거 이력에 추가하지 않는다. 빈 이력은 빈 상태로 표시한다. 주별/월별 전환은 받은 자료만 이용하며 추가 API 요청을 하지 않는다.
 - 선택 기간 최저·최고는 반환된 유효 표본으로 계산한다. 주별·월별 값은 그 기간의 최저가이므로 오늘 카드 결제 가격·일별 평균·일별 관측과 다르다.
@@ -42,17 +42,17 @@
 아래 명령은 사용자가 각 폴더에서 직접 실행한다.
 
 ```powershell
-cd D:\github\codyssey_final\backend\collector
+cd E:\github\codyssey_final\backend\collector
 npm test
 
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn test
 
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 # 기존에 사용하는 가상환경을 활성화한 뒤
 python -m unittest discover -s tests
 
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```
 

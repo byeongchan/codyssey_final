@@ -34,7 +34,7 @@ Spring Boot를 재시작하고 프론트엔드를 새로고침합니다. 실행�
 서버 검증 테스트 소스는 `FirebaseSessionVerifierTest.java`에 추가했습니다. 실행하려면:
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn '-Dtest=FirebaseSessionVerifierTest' test
 ```
 

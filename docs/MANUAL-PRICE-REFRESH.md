@@ -17,7 +17,7 @@ LIVE_OFFERS_CACHE_SECONDS=86400
 각 서버 터미널에서 실행 중인 서버를 종료한 뒤 Spring 설정을 다시 불러오고 실행하세요.
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 & ..\..\scripts\Import-Env.ps1 -Path .env
 mvn spring-boot:run
 ```
@@ -49,11 +49,11 @@ mvn spring-boot:run
 외부 요청·갱신 검증에는 Reef 크레딧이 사용될 수 있습니다. 테스트·빌드는 사용자가 실행합니다.
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn '-Dtest=LiveDataCacheTest' test
 ```
 
 ```powershell
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```

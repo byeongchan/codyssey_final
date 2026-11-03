@@ -1,4 +1,8 @@
-# 실제 다나와 상품 찜
+> 검증 상태(2026-11-03): 아래의 “미실행” 표현은 작성 당시 기록입니다. 현재 프론트 빌드·Java 테스트 성공 보고와 배포 증거는 [TASKS](../TASKS.md)에 구분해 기록했습니다. 개별 실제 API·계정 시나리오와 Node/Python 테스트까지 통과했다는 의미는 아닙니다.
+
+# 실제 상품 찜
+
+현재 LiveWishlistProvider는 다나와·무신사·중고 찜을 함께 조회하고 공급자와 상품 ID로 구분합니다. 아래는 다나와 저장 경로의 상세 설명이며 다른 공급자는 [무신사](MUSINSA.md)·[중고](USED-MARKET.md)를 참고합니다.
 
 ## 화면 사용
 
@@ -26,7 +30,7 @@
 추가 패키지·Firestore 복합 인덱스·규칙 배포는 필요하지 않다. 기존 Firebase 서비스 계정 설정으로 Spring Boot를 재시작하고 프론트엔드를 새로고침한다.
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn spring-boot:run
 ```
 
@@ -44,10 +48,10 @@ mvn spring-boot:run
 테스트/빌드 명령은 사용자가 직접 실행한다.
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn test
 
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```
 

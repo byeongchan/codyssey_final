@@ -71,11 +71,11 @@ Java 테스트 소스에 A~E와 할인 없는 고가·시급성 사례를 작성
 사용자가 실행할 검증 명령:
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn "-Dtest=PurchaseTimingEngineTest,PriceAgentPolicyTest,PriceAgentControllerTest" test
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p test_price_agent.py
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```
 

@@ -1,3 +1,5 @@
+> **개발 이력 보관 문서** · 2026-11-03 분류. 작성 당시의 설명이며 현재 배포·기능 검증 상태를 나타내지 않습니다. 현재 문서는 [문서 인덱스](../README.md)를 참고하세요.
+
 # 상품 조회 캐시와 더미 재확인 작업
 
 현재는 React → Spring 비동기 작업 → Node.js 로컬 HTTP 수집기 → 같은 fixture의 버전·검색 결과 검증 흐름이다. 기본 READ_ONLY는 재확인만 하며, 추가한 STORE_SNAPSHOT은 [스냅샷 저장 안내](SNAPSHOTS.md)에 따라 같은 근거를 Firestore Emulator에 보관한다. 실제 Reef 수집, 파일의 실행 중 다시 읽기, 관측 시각 변경은 하지 않는다. 조회 소스는 CATALOG_SOURCE로 선택하며 snapshot 모드의 저장 후 갱신은 [조회 소스 안내](CATALOG-SOURCE.md)를 따른다. 이 문서의 실행·테스트 명령은 사용자가 수행하며 아직 실행하지 않았다.

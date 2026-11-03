@@ -6,7 +6,7 @@
 - `frontend/public/brand/carousel-compare-wide.png`
 - `frontend/public/brand/carousel-pick-wide.png`
 
-`frontend/src/site2Design.ts`에서 각 슬라이드에 연결한다. 이미지 자체에 문구를 넣지 않고 기존 HTML 문구를 유지한다. 표시 시 contain으로 원본 전체를 보존하고 모바일은 하단에 배치한다. 캐러셀 전환 시계와 버튼 로직은 변경하지 않았다.
+`frontend/src/site2Design.ts`에서 각 슬라이드에 연결한다. 이미지 자체에 문구를 넣지 않고 기존 HTML 문구를 유지한다. 현재 CSS는 object-fit: cover와 오른쪽 정렬을 사용하고 각 슬라이드의 overflow를 제한한다. 모바일 이미지는 하단 35% 영역에 배치한다. 기존 contain 설명은 현재 스타일이 아니다. 캐러셀 전환 시계와 버튼 로직은 변경하지 않았다.
 
 ## 생성 프롬프트
 

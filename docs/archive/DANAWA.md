@@ -1,8 +1,10 @@
-> 실제 Firebase Cloud · Reef · Gemini 통합 연결은 [LIVE-CONNECTION.md](LIVE-CONNECTION.md)를 먼저 참고하세요. 이 문서의 에뮬레이터/더미 실행 절차는 이전 개발 모드 안내입니다.
+> **개발 이력 보관 문서** · 2026-11-03 분류. 작성 당시의 설명이며 현재 배포·기능 검증 상태를 나타내지 않습니다. 현재 문서는 [문서 인덱스](../README.md)를 참고하세요.
+
+> 실제 Firebase Cloud · Reef · Gemini 통합 연결은 [LIVE-CONNECTION.md](../LIVE-CONNECTION.md)를 먼저 참고하세요. 이 문서의 에뮬레이터/더미 실행 절차는 이전 개발 모드 안내입니다.
 
 # Reef 다나와 검색·상품·판매처 연동
 
-> 2026-10-23: 상세 페이지의 실제 price_history 주간·월간 차트와 직접 입력 리뷰 Gemini 요약을 추가했다. 아래의 과거 미연결 설명보다 [최신 상세 확장 안내](DETAIL-INSIGHTS.md)를 우선한다. 리뷰 본문 자동 수집은 현재 Reef 다나와 미지원이다.
+> 2026-10-23: 상세 페이지의 실제 price_history 주간·월간 차트와 직접 입력 리뷰 Gemini 요약을 추가했다. 아래의 과거 미연결 설명보다 [최신 상세 확장 안내](../DETAIL-INSIGHTS.md)를 우선한다. 리뷰 본문 자동 수집은 현재 Reef 다나와 미지원이다.
 
 사용자가 제공한 [다나와 Markdown](https://reefapi.com/docs/danawa.md)과 [무신사 Markdown](https://reefapi.com/docs/musinsa.md)을 확인하고 진행 중이던 다나와 연동을 작성했다. 문서 HTTP 조회만 했으며 설치·서버 실행·빌드·테스트·실제 Reef API 호출은 수행하지 않았다.
 

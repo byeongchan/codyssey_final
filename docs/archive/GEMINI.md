@@ -1,4 +1,6 @@
-> 실제 Firebase Cloud · Reef · Gemini 통합 연결은 [LIVE-CONNECTION.md](LIVE-CONNECTION.md)를 먼저 참고하세요. 이 문서의 에뮬레이터/더미 실행 절차는 이전 개발 모드 안내입니다.
+> **개발 이력 보관 문서** · 2026-11-03 분류. 작성 당시의 설명이며 현재 배포·기능 검증 상태를 나타내지 않습니다. 현재 문서는 [문서 인덱스](../README.md)를 참고하세요.
+
+> 실제 Firebase Cloud · Reef · Gemini 통합 연결은 [LIVE-CONNECTION.md](../LIVE-CONNECTION.md)를 먼저 참고하세요. 이 문서의 에뮬레이터/더미 실행 절차는 이전 개발 모드 안내입니다.
 
 # Gemini 설명 연동
 

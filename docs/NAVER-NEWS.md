@@ -1,3 +1,5 @@
+> 검증 상태(2026-11-03): 아래의 “미실행” 표현은 작성 당시 기록입니다. 현재 프론트 빌드·Java 테스트 성공 보고와 배포 증거는 [TASKS](../TASKS.md)에 구분해 기록했습니다. 개별 실제 API·계정 시나리오와 Node/Python 테스트까지 통과했다는 의미는 아닙니다.
+
 > 최신 구현: [뉴스 가격 영향 평가·대화형 구매 비서](NEWS-PRICE-IMPACT.md). 상품군별 다중 검색과 별도 인과 경로 평가를 사용합니다. 아래 단일 카테고리 검색 설명은 이전 동작이며 최신 문서가 우선합니다. API HUB 주소·인증 설정은 동일합니다.
 
 # NAVER API HUB 뉴스 검색 연결
@@ -38,7 +40,7 @@ FastAPI와 Spring Boot를 재시작하고 프론트엔드를 새로고침한 후
 이번 변경에서는 API 호출·테스트·서버 실행을 하지 않습니다. 사용자가 실행할 테스트:
 
 ```powershell
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p test_naver_news.py
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p test_rss_settings.py
 ```

@@ -66,6 +66,6 @@
 빌드·테스트·서버 실행은 사용자가 진행합니다. 추가한 테스트 소스를 실행하려면:
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn '-Dtest=DisplayNamePolicyTest,AdminAccessTest,MemberProfileControllerTest' test
 ```

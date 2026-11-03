@@ -6,6 +6,33 @@
 
 프론트엔드는 **Vercel**, 백엔드는 **Render**에 배포합니다. 실제 구매·결제·거래는 원본 판매처와 플랫폼에서 진행합니다.
 
+## 배포 주소 및 실행 증거
+
+| 구분 | 주소 |
+| --- | --- |
+| 서비스 접속 · Vercel | [줍줍각 웹사이트](https://codyssey-final.vercel.app/) |
+| 백엔드 · Render | [백엔드 서버](https://joopjoop-backend-azvl.onrender.com) |
+| API 상태 확인 | [헬스체크 응답](https://joopjoop-backend-azvl.onrender.com/api/v1/health) |
+
+다음은 배포 및 상태 확인 당시의 증거입니다. 현재 서비스 상태는 위 링크에서 별도로 확인할 수 있습니다.
+
+- **Vercel 배포:** Production 배포의 `Ready` 상태, 서비스 도메인, `main` 브랜치와 배포 커밋을 확인할 수 있습니다.
+- **Render 헬스체크:** `status: UP`, `mode: reef-danawa`, `synthetic: false` 응답을 확인할 수 있습니다. 상태 응답은 상품 검색·AI 상담 등 모든 기능의 동작 검증을 대신하지 않습니다.
+
+<details>
+<summary>Vercel 배포 성공 화면</summary>
+
+![Vercel Production 배포 Ready 상태](docs/evidence/vercel_배포화면.png)
+
+</details>
+
+<details>
+<summary>Render API 헬스체크 응답</summary>
+
+![Render API의 UP 상태 및 실제 데이터 모드 응답](docs/evidence/render_api_health응답확인.png)
+
+</details>
+
 ## 주요 기능
 
 - **상품 탐색:** 검색·카테고리 조회, 최근 검색·최근 본 상품
@@ -203,13 +230,13 @@ Render는 세 백엔드 프로세스를 하나의 컨테이너에서 실행합�
 | Vercel Root Directory | `frontend` |
 | 프론트 빌드 / 출력 | `npm run build` / `dist` |
 | Render 배포 정의 | 루트 `render.yaml` 및 `Dockerfile` |
-| Render 상태 확인 | `https://<Render호스트>/api/v1/health` |
+| Render 상태 확인 | `https://joopjoop-backend-azvl.onrender.com/api/v1/health` |
 | 내부 통신 | 동일한 `INTERNAL_API_KEY`, loopback 전용 |
 
 **Vercel 환경변수**는 아래 6개이며, 브라우저용 설정으로 등록합니다. API 주소에는 실제 Render 호스트를 사용합니다.
 
 ```dotenv
-VITE_API_BASE_URL=https://<Render호스트>/api/v1
+VITE_API_BASE_URL=https://joopjoop-backend-azvl.onrender.com/api/v1
 VITE_DATA_MODE=live
 VITE_FIREBASE_MODE=cloud
 VITE_FIREBASE_PROJECT_ID=<Firebase 프로젝트 ID>
@@ -219,7 +246,7 @@ VITE_FIREBASE_AUTH_DOMAIN=<Firebase 웹 앱 authDomain>
 
 `VITE_*` 값은 빌드에 포함됩니다. Firebase 웹 앱 키와 서버 서비스 계정의 비공개 키를 구분하고, Reef·Gemini·NAVER·내부 키는 Render에만 등록합니다. Vercel 환경변수 변경 후에는 재배포해야 합니다.
 
-**Render**에는 실제 Vercel origin을 `CORS_ALLOWED_ORIGINS`로 등록합니다. 예: `https://<Vercel호스트>`처럼 마지막 슬래시·경로 없이 지정합니다. 서비스 계정 JSON은 Secret File `firebase-service-account.json`으로 등록하고 `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-service-account.json`으로 연결합니다. Firebase Authentication 승인된 도메인에도 프론트 호스트를 추가합니다.
+**Render**에는 실제 Vercel origin을 `CORS_ALLOWED_ORIGINS`로 등록합니다. 예: `https://codyssey-final.vercel.app`처럼 마지막 슬래시·경로 없이 지정합니다. 서비스 계정 JSON은 Secret File `firebase-service-account.json`으로 등록하고 `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-service-account.json`으로 연결합니다. Firebase Authentication 승인된 도메인에도 프론트 호스트를 추가합니다.
 
 현재 배포 정의는 **Render 무료 플랜**입니다. 비활성 상태 이후 첫 요청은 서버 재시작으로 지연될 수 있으며, 세 프로세스가 메모리를 공유합니다. 외부 API 사용량과 비용은 별도로 관리합니다. 설정 전체·검증 순서는 [배포 안내](docs/DEPLOYMENT.md)를 참고하세요. 정책 초안의 미정 운영 정보는 [운영 전 확인 사항](docs/LEGAL-DOCUMENTS.md)에 정리되어 있습니다.
 
@@ -270,6 +297,27 @@ cd E:\github\codyssey_final\frontend
 npm run build
 ```
 
+## 코드 검사 및 형식 정리
+
+저장소 루트에서 검사 도구를 설치합니다. Node.js 22.12 이상·Java 17·Maven과 기존 Python 가상환경을 사용합니다.
+
+```powershell
+cd E:\github\codyssey_final
+npm ci
+.\.venv\Scripts\python.exe -m pip install -r requirements-quality.txt
+.\.venv\Scripts\python.exe -m pre_commit install
+```
+
+| 대상 | 검사 | 자동 형식 정리 |
+| --- | --- | --- |
+| React·TypeScript·Node 수집기 | `npm run quality:js` | `npm run format` |
+| Python AI·배포 스크립트 | `python -m ruff check backend/ai deploy` 및 `python -m ruff format --check backend/ai deploy` | `python -m ruff format backend/ai deploy` |
+| Java | `mvn -f backend/api/pom.xml spotless:check` | `mvn -f backend/api/pom.xml spotless:apply` |
+
+Python 명령은 가상환경을 활성화하거나 `.\.venv\Scripts\python.exe`로 실행합니다. 커밋 훅은 변경된 JS/TS·Python 파일을 검사하며 Java 변경이 있으면 Spotless를 실행합니다. 새로 내려받은 개발 환경마다 훅 설치가 필요합니다. ESLint의 React effect 의존성 경고는 표시하되 오류와 구분합니다. 형식 정리는 소스 변경을 만들므로 결과를 확인한 후 커밋합니다.
+
+`.github/workflows/quality.yml`은 PR·main 푸시에서 언어별 린트/포맷, 프론트 빌드, Node·Python·Java 테스트를 실행합니다. 운영 비밀키는 등록하지 않습니다. 원격 CI 성공 여부는 GitHub Actions에서 확인합니다. 배포 서버 설정과 독립적인 검사이며 이 워크플로를 추가하는 것만으로 배포가 검사 완료를 기다리도록 강제되지는 않습니다.
+
 ## 자주 확인할 문제
 
 | 증상 | 확인할 항목 |
@@ -296,6 +344,8 @@ git check-ignore backend/collector/.env frontend/.env secrets/firebase-service-a
 `.gitignore`는 이미 추적·공개된 비밀을 제거하지 않습니다. 공개된 키는 폐기·재발급해야 합니다. Firebase 규칙·인덱스는 코드로 포함하며 `사이트/`, `사이트2/` 목업은 현재 제외 설정을 유지합니다.
 
 ## 상세 문서
+
+전체 문서의 현재 사용 범위와 보관 기준은 [문서 인덱스](docs/README.md)를 참고하세요. 초기 fixture·개발 이력은 [보관 폴더](docs/archive/README.md)로 분리했습니다.
 
 | 주제 | 문서 |
 | --- | --- |

@@ -78,14 +78,14 @@ EVIDENCE는 전망/부정 표현, 상품 탑재가 확인되지 않은 간접 �
 추가 패키지와 Firebase 인덱스 배포는 필요하지 않습니다. 기존 Gemini·네이버 환경 변수를 유지하고 Spring Boot/FastAPI를 모두 재시작한 뒤 프론트엔드를 새로고침합니다. 로그인 후 ‘이건 무슨 상품이야?’ → ‘게임용으로 괜찮아?’ → ‘관련 산업 뉴스가 가격에 어떤 영향을 줄까?’처럼 연속 질문을 확인하세요.
 
 ```powershell
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*news*.py"
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p test_product_identity.py
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests -p test_price_agent.py
 ..\..\.venv\Scripts\python.exe evaluate_news_impact.py --cases saved-news-cases.jsonl
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn "-Dtest=NewsCategoryTest,PriceAgentPolicyTest,PriceAgentControllerTest" test
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```
 
