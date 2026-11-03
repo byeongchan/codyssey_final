@@ -1,12 +1,16 @@
-# PRIZM
+# 줍줍각
 
-상품 가격 이력과 판매처별 가격, 관련 뉴스를 바탕으로 구매 시점을 살펴보는 서비스입니다. Reef 다나와 API로 상품 정보를 가져오고, 서버에서 계산한 가격 근거를 Gemini가 대화 형식으로 설명합니다.
+**AI SMART PRICE PICK**
+
+줍줍각은 다나와·무신사 상품과 중고나라·당근 매물을 탐색하고, 가격과 구매 조건을 비교하는 서비스입니다. 가격 이력과 검색 결과를 서버에서 분석하고, Gemini 기반 AI 구매 비서가 확인된 정보를 바탕으로 구매 판단을 돕습니다.
+
+프론트엔드는 **Vercel**, 백엔드는 **Render**에 배포합니다. 실제 구매·결제·거래는 원본 판매처와 플랫폼에서 진행합니다.
 
 ## 주요 기능
 
-- **상품 탐색:** 검색·카테고리 조회, 페이지당 최대 12개 상품, 최근 검색·최근 본 상품
+- **상품 탐색:** 검색·카테고리 조회, 최근 검색·최근 본 상품
 - **무신사 패션·스포츠:** 해당 카테고리에서 다나와·무신사 선택, 무신사 분류 검색·옵션 재고·사이즈표·실제 리뷰·찜 ([설정 안내](docs/MUSINSA.md))
-- **중고 최저가:** 참고 화면 디자인 기반 중고나라·당근 통합 검색, 동네 선택·매물 상세·가격 요약·찜·최근 본 상품 ([설정 안내](docs/USED-MARKET.md))
+- **중고 최저가:** 중고나라·당근 통합 검색, 동네 선택·매물 상세·가격 요약·찜·최근 본 상품 ([설정 안내](docs/USED-MARKET.md))
 - **상세 검색:** 선택한 카테고리에 맞는 상품 종류·기종·제품군·브랜드 드롭다운 ([사용 안내](docs/PRODUCT-FILTERS.md))
 - **상품 상세:** 상품 정보, 쇼핑몰별 최저가, 기간별 가격 흐름과 지점별 가격 확인
 - **AI 구매 비서:** 로그인 회원 전용 상담, 구매 판단·가격 흐름·뉴스·사양 등 질문에 맞춘 답변
@@ -14,7 +18,7 @@
 - **회원 기능:** 이메일 인증 가입, 비밀번호 재설정, 내 정보, 찜, 표시 이름 변경
 - **관리자 권한:** Firestore에서 관리자를 지정하고 내 정보에서 다른 회원의 권한 부여·해제
 
-커뮤니티에서 일반 게시글과 공지사항을 조회할 수 있습니다. 이메일 인증 회원은 표시 이름 등록 후 글과 댓글을 작성할 수 있으며, 공지사항은 관리자만 작성하고 댓글은 허용하지 않습니다. 작성자와 관리자는 글·댓글을 삭제할 수 있습니다. 설정과 확인 절차는 [커뮤니티 안내](docs/COMMUNITY.md)를 참고하세요. 다나와 연동에서는 리뷰 본문을 제공받지 못하면 직접 확인 안내를 표시합니다.
+커뮤니티에서 일반 게시글과 공지사항을 조회할 수 있습니다. 이메일 인증 회원은 표시 이름 등록 후 글과 댓글을 작성할 수 있으며, 공지사항은 관리자만 작성하고 댓글은 허용하지 않습니다. 작성자는 자신의 글·댓글을 수정할 수 있고, 작성자와 관리자는 삭제할 수 있습니다. 삭제한 글은 목록에 남기지 않으며, 탈퇴 시 삭제하지 않은 게시글은 유지합니다. 이미지 업로드는 지원하지 않습니다. 설정과 확인 절차는 [커뮤니티 안내](docs/COMMUNITY.md)를 참고하세요. 다나와 연동에서는 리뷰 본문을 제공받지 못하면 직접 확인 안내를 표시합니다.
 
 ## 시스템 구성
 
@@ -24,11 +28,11 @@ Render 백엔드·Vercel 프론트엔드 배포는 [배포 안내](docs/DEPLOYME
 | --- | --- | --- |
 | React · TypeScript · Vite | 사용자 화면, Firebase 로그인 | 5173 |
 | Spring Boot · Java 17 | 공개·회원 API, 가격 판단, DB 조회·저장, 권한 검사 | 8080 |
-| Node.js | Reef 다나와·무신사 API 수집 | 4001 |
+| Node.js | Reef 다나와·무신사·중고나라·당근 API 수집 | 4001 |
 | FastAPI · Python | Gemini 상담, 뉴스 수집·선별 | 8000 |
 | Firebase Authentication · Cloud Firestore | 인증, 상품·가격 이력·개인 데이터·관리자 권한 저장 | 클라우드 |
 
-프론트엔드는 `/api` 요청을 Spring Boot로 전달합니다. Spring Boot가 수집기와 AI 서버를 호출하며, 외부 API 비밀 키와 Firebase 서비스 계정은 서버에서만 사용합니다.
+로컬에서는 Vite가 `/api` 요청을 Spring Boot로 전달하고, 배포 환경에서는 프론트엔드가 `VITE_API_BASE_URL`에 지정된 Render HTTPS API를 직접 호출합니다. Spring Boot가 수집기와 AI 서버를 호출하며, 외부 API 비밀 키와 Firebase 서비스 계정은 서버에서만 사용합니다.
 
 ```text
 frontend/           React 화면과 정적 자산
@@ -36,13 +40,18 @@ backend/api/        Spring Boot API
 backend/collector/  Reef 수집기
 backend/ai/         FastAPI·Gemini·뉴스 처리
 firebase/           Firestore 규칙·인덱스·에뮬레이터 설정
+deploy/             Render 컨테이너 시작·프로세스 관리
 scripts/            PowerShell 환경변수 로더
 docs/               기능별 설정·설계·확인 방법
+Dockerfile          백엔드 통합 이미지 빌드
+render.yaml         Render 무료 Web Service 설정
 PRD.md              제품 요구사항
 TASKS.md            개발 체크리스트
 ```
 
 ## 개발 환경 준비
+
+배포된 서비스를 이용하는 데 로컬 개발 환경은 필요하지 않습니다. 아래 절차는 개발·유지보수를 위한 설정입니다. 재배포는 [배포 및 운영](#배포-및-운영)과 [상세 배포 안내](docs/DEPLOYMENT.md)를 참고하세요.
 
 - Java 17, Maven
 - Node.js 22.12 이상, npm
@@ -51,7 +60,7 @@ TASKS.md            개발 체크리스트
 - Reef API 키, Gemini API 키
 - 뉴스 사용 시 NAVER API HUB Client ID·Client Secret
 
-아래 명령은 **Windows PowerShell**, 저장소 위치는 `D:\github\codyssey_final` 기준입니다. 다른 위치에 내려받았다면 경로를 변경하세요.
+아래 명령은 **Windows PowerShell**, 저장소 위치는 `E:\github\codyssey_final` 기준입니다. 다른 위치에 내려받았다면 경로를 변경하세요.
 
 ### 1. Firebase 설정
 
@@ -63,7 +72,7 @@ TASKS.md            개발 체크리스트
 Firestore 규칙과 조회 인덱스를 배포합니다. 이미 동일한 설정을 배포했다면 생략할 수 있습니다. 브라우저의 Firestore 직접 접근은 차단하고 서버를 통해 이용하는 구조입니다.
 
 ```powershell
-cd D:\github\codyssey_final\firebase
+cd E:\github\codyssey_final\firebase
 npx.cmd --package=firebase-tools firebase login
 npx.cmd --package=firebase-tools firebase deploy --only firestore:rules,firestore:indexes --project 실제-프로젝트-ID
 ```
@@ -82,7 +91,7 @@ npx.cmd --package=firebase-tools firebase deploy --only firestore:rules,firestor
 | `backend/ai/.env` | `GEMINI_API_KEY`, `GEMINI_MODEL`, `INTERNAL_API_KEY`, 뉴스 설정 |
 
 - `INTERNAL_API_KEY`: 직접 생성한 충분히 긴 임의 문자열을 **API·수집기·AI 서버에 동일하게** 설정합니다. 프론트엔드에는 넣지 않습니다.
-- `GEMINI_MODEL`: **Spring Boot와 FastAPI 양쪽에 같은 모델 ID**를 입력합니다. 현재 두 예제 파일의 값이 다르므로 직접 맞춰야 합니다. 사용하려는 값은 `gemini-3.5-flash-lite`입니다. 실제 사용 가능 여부는 해당 API 프로젝트에서 확인하세요.
+- `GEMINI_MODEL`: **Spring Boot와 FastAPI 양쪽에 같은 모델 ID**를 입력합니다. 예제는 `gemini-3.5-flash-lite`이며, 실제 사용 가능한 모델 ID는 해당 API 프로젝트에서 확인하세요.
 - `GOOGLE_APPLICATION_CREDENTIALS`: 서비스 계정 JSON의 **절대 경로**를 입력합니다.
 - 실제 연결 모드는 예제의 `DATA_PROVIDER=reef-danawa`, `FIREBASE_MODE=cloud`, `VITE_DATA_MODE=live`를 유지합니다. API의 `CATALOG_SOURCE=fixture`는 현재 실제 연결 경로에서 사용하지 않는 기존 설정입니다.
 - 클라우드 연결에서는 `FIREBASE_AUTH_EMULATOR_HOST`, `FIRESTORE_EMULATOR_HOST`를 제거합니다.
@@ -106,13 +115,13 @@ NAVER_CLIENT_SECRET=발급받은_Client_Secret
 최초 설정 또는 의존성 변경 시 실행합니다.
 
 ```powershell
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm install
 
-cd D:\github\codyssey_final\backend\collector
+cd E:\github\codyssey_final\backend\collector
 npm install
 
-cd D:\github\codyssey_final
+cd E:\github\codyssey_final
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend\ai\requirements-gemini.txt
 ```
@@ -126,14 +135,14 @@ py -3.11 -m venv .venv
 **1. Node 수집기**
 
 ```powershell
-cd D:\github\codyssey_final\backend\collector
+cd E:\github\codyssey_final\backend\collector
 npm start
 ```
 
 **2. FastAPI · Gemini**
 
 ```powershell
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 & ..\..\scripts\Import-Env.ps1 -Path .env
 ..\..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
@@ -141,7 +150,7 @@ cd D:\github\codyssey_final\backend\ai
 **3. Spring Boot**
 
 ```powershell
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 & ..\..\scripts\Import-Env.ps1 -Path .env
 mvn spring-boot:run
 ```
@@ -149,11 +158,11 @@ mvn spring-boot:run
 **4. React**
 
 ```powershell
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run dev
 ```
 
-접속: [PRIZM 로컬 화면](http://127.0.0.1:5173). 각 서버는 해당 터미널에서 `Ctrl+C`로 종료합니다. 이 설정은 로컬 개발용이며 공개 서비스 배포 구성은 별도로 필요합니다.
+접속: [줍줍각 로컬 화면](http://127.0.0.1:5173). 각 서버는 해당 터미널에서 `Ctrl+C`로 종료합니다. 로컬은 `APP_ENV=development`를 사용하며 배포 설정과 구분합니다.
 
 ## 데이터 저장·가격 갱신 정책
 
@@ -167,6 +176,52 @@ npm run dev
 - 일별 기록이 부족하면 확보한 주간·월간 자료를 활용하되 일별 통계로 꾸미지 않습니다. 저장 자료의 시각과 비교 조건은 AI 판단에 반영합니다.
 
 설정값과 확인 절차는 [수동 가격 갱신 안내](docs/MANUAL-PRICE-REFRESH.md)를 기준으로 합니다. 기존 문서의 자동 갱신 설명보다 이 정책이 우선합니다.
+
+중고 검색의 AI 분석은 조회한 매물만 사용합니다. 같은 모델명으로 묶고, 모델명이 없으면 상품 종류로 분류합니다. 용량·색상까지 나누지 않은 참고 가격이며, 최저가·평균가·최고가·가격 분포와 지역 정보 제공·미제공 비율을 확인할 수 있습니다. 명확한 비정상 저가·분석 제외 조건을 적용하더라도 허위 매물 여부를 확정하는 기능은 아닙니다.
+
+중고 상세 비서는 API의 제목·설명·가격·지역 등과 연결된 검색 근거를 함께 참고합니다. 브라우저에는 상품별 검색 근거의 ID와 후보 ID만 최대 24시간 저장하고 서버가 실제 자료를 검증합니다. 최근 본 상품은 이 기기에서 최대 5개·30일 보관하므로, 상품 기록이 남아 있어도 검색 비교 근거는 먼저 만료될 수 있습니다. 이때는 상세 정보로 분석하고 재검색을 안내합니다.
+
+AI 답변은 확인된 근거와 추가 검토 사항을 구분하는 참고 정보입니다. 거래 안전·실물 상태·미래 가격을 보증하지 않습니다. 현재 AI 상담은 다나와 상품과 중고 매물에 연결되어 있으며 무신사 전용 화면에는 연결되어 있지 않습니다.
+
+## 배포 및 운영
+
+```text
+브라우저 → Vercel (React 정적 빌드)
+              ↓ HTTPS · Firebase 사용자 토큰
+           Render (Docker Web Service)
+              ├─ Spring Boot : 공개 API
+              ├─ Node 수집기 : 127.0.0.1:4001
+              └─ FastAPI    : 127.0.0.1:8000
+                   ↓
+           Firebase / Reef / Gemini / NAVER
+```
+
+Render는 세 백엔드 프로세스를 하나의 컨테이너에서 실행합니다. 수집기와 AI 서버는 외부에 공개하지 않습니다. 시작 스크립트는 필수 설정과 내부 서버 준비 상태를 확인하고, 프로세스 하나가 종료되면 나머지도 종료합니다.
+
+| 항목 | 설정 |
+| --- | --- |
+| Vercel Root Directory | `frontend` |
+| 프론트 빌드 / 출력 | `npm run build` / `dist` |
+| Render 배포 정의 | 루트 `render.yaml` 및 `Dockerfile` |
+| Render 상태 확인 | `https://<Render호스트>/api/v1/health` |
+| 내부 통신 | 동일한 `INTERNAL_API_KEY`, loopback 전용 |
+
+**Vercel 환경변수**는 아래 6개이며, 브라우저용 설정으로 등록합니다. API 주소에는 실제 Render 호스트를 사용합니다.
+
+```dotenv
+VITE_API_BASE_URL=https://<Render호스트>/api/v1
+VITE_DATA_MODE=live
+VITE_FIREBASE_MODE=cloud
+VITE_FIREBASE_PROJECT_ID=<Firebase 프로젝트 ID>
+VITE_FIREBASE_API_KEY=<Firebase 웹 앱 apiKey>
+VITE_FIREBASE_AUTH_DOMAIN=<Firebase 웹 앱 authDomain>
+```
+
+`VITE_*` 값은 빌드에 포함됩니다. Firebase 웹 앱 키와 서버 서비스 계정의 비공개 키를 구분하고, Reef·Gemini·NAVER·내부 키는 Render에만 등록합니다. Vercel 환경변수 변경 후에는 재배포해야 합니다.
+
+**Render**에는 실제 Vercel origin을 `CORS_ALLOWED_ORIGINS`로 등록합니다. 예: `https://<Vercel호스트>`처럼 마지막 슬래시·경로 없이 지정합니다. 서비스 계정 JSON은 Secret File `firebase-service-account.json`으로 등록하고 `GOOGLE_APPLICATION_CREDENTIALS=/etc/secrets/firebase-service-account.json`으로 연결합니다. Firebase Authentication 승인된 도메인에도 프론트 호스트를 추가합니다.
+
+현재 배포 정의는 **Render 무료 플랜**입니다. 비활성 상태 이후 첫 요청은 서버 재시작으로 지연될 수 있으며, 세 프로세스가 메모리를 공유합니다. 외부 API 사용량과 비용은 별도로 관리합니다. 설정 전체·검증 순서는 [배포 안내](docs/DEPLOYMENT.md)를 참고하세요. 정책 초안의 미정 운영 정보는 [운영 전 확인 사항](docs/LEGAL-DOCUMENTS.md)에 정리되어 있습니다.
 
 ## 회원·관리자 설정
 
@@ -195,23 +250,23 @@ npm run dev
 4. 저장된 상품 재방문과 명시적 갱신 시 수집 횟수·자료 시각 확인
 5. 일반 회원·관리자 계정의 권한 차이 확인
 
-빌드와 테스트는 사용자가 직접 실행합니다.
+프론트엔드 타입 검사·빌드와 Java 테스트를 확인한 뒤 변경사항을 배포합니다. 아래 명령은 로컬 검증용이며 외부 서비스 연결 검증과는 별개입니다.
 
 ```powershell
 # Spring Boot
-cd D:\github\codyssey_final\backend\api
+cd E:\github\codyssey_final\backend\api
 mvn test
 
 # Node 수집기
-cd D:\github\codyssey_final\backend\collector
+cd E:\github\codyssey_final\backend\collector
 npm test
 
 # FastAPI
-cd D:\github\codyssey_final\backend\ai
+cd E:\github\codyssey_final\backend\ai
 ..\..\.venv\Scripts\python.exe -m unittest discover -s tests
 
 # 프론트엔드 타입 검사·빌드
-cd D:\github\codyssey_final\frontend
+cd E:\github\codyssey_final\frontend
 npm run build
 ```
 
@@ -219,6 +274,8 @@ npm run build
 
 | 증상 | 확인할 항목 |
 | --- | --- |
+| 배포 후 `Failed to fetch` | Render 상태 API, Vercel `VITE_API_BASE_URL`, 현재 프론트 origin과 CORS 설정 일치, 환경변수 변경 후 재배포 |
+| `Firebase secret file is missing` | Render Secret File의 이름과 `GOOGLE_APPLICATION_CREDENTIALS` 경로 일치 |
 | `No module named 'httpx'` | 실행에 사용하는 가상환경에 `requirements-gemini.txt` 설치 |
 | Firebase 서버 인증·접근 오류 | 서비스 계정 절대 경로, 프로젝트 ID, Firestore 생성·IAM 권한, 에뮬레이터 환경변수 |
 | 뉴스 인증·권한 오류 | NAVER API HUB 키 쌍과 해당 애플리케이션의 API 사용 권한 |
@@ -228,10 +285,10 @@ npm run build
 
 ## 저장소에 올리기 전
 
-실제 `.env`, 서비스 계정 JSON, 인증서·개인 키, `secrets/`, `credentials/`는 Git 제외 대상입니다. `.env.example`만 실제 키 없이 공유합니다. 프론트엔드 `VITE_*` 값은 브라우저에 포함되므로 서버용 비밀을 넣지 마세요.
+실제 `.env`, 서비스 계정 JSON, 인증서·개인 키, `secrets/`, `credentials/`는 Git 제외 대상입니다. `.env.example`과 `.env.production.example`만 실제 키 없이 공유합니다. 프론트엔드 `VITE_*` 값은 브라우저에 포함되므로 서버용 비밀을 넣지 마세요.
 
 ```powershell
-cd D:\github\codyssey_final
+cd E:\github\codyssey_final
 git status --short
 git check-ignore backend/collector/.env frontend/.env secrets/firebase-service-account.json
 ```
@@ -242,6 +299,9 @@ git check-ignore backend/collector/.env frontend/.env secrets/firebase-service-a
 
 | 주제 | 문서 |
 | --- | --- |
+| Render·Vercel 배포 | [배포 및 운영 설정](docs/DEPLOYMENT.md) |
+| 중고 검색·AI 분석 | [중고 최저가](docs/USED-MARKET.md), [중고 구매 비서](docs/USED-AGENT.md) |
+| 패션·상세 검색·커뮤니티 | [무신사](docs/MUSINSA.md), [상세 검색](docs/PRODUCT-FILTERS.md), [게시판](docs/COMMUNITY.md) |
 | 제품 요구사항·작업 목록 | [PRD](PRD.md), [TASKS](TASKS.md) |
 | 외부 서비스 연결 | [Firebase·Reef·Gemini](docs/LIVE-CONNECTION.md) |
 | 저장·수동 가격 갱신 | [가격 갱신 정책](docs/MANUAL-PRICE-REFRESH.md) |
