@@ -6,6 +6,15 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/v1/health
+    buildFilter:
+      paths:
+        - backend/**
+        - deploy/**
+        - Dockerfile
+        - .dockerignore
+        - render.yaml
+      ignoredPaths:
+        - backend/**/*.md
     envVars:
       - key: INTERNAL_API_KEY
         generateValue: true

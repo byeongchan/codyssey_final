@@ -12,6 +12,9 @@
 
 ## 1. 저장소 준비
 
+Render 자동 배포는 `buildFilter`로 `backend/**`, `deploy/**`, `Dockerfile`, `.dockerignore`, `render.yaml` 변경에 한정한다. README·docs·프론트만 변경하면 백엔드 자동 빌드를 실행하지 않는다. 백엔드 폴더의 Markdown 문서도 제외한다. 단, Blueprint YAML 변경·수동 배포·서비스 설정 변경은 별도로 배포될 수 있다.
+Blueprint로 관리 중이면 이 변경을 푸시하고 동기화한다. 수동 생성한 서비스는 Render → Settings → Build & Deploy → Build Filters에 동일한 Included Paths와 Ignored Paths를 등록해야 한다. Root Directory는 계속 비워 둔다.
+
 새 Dockerfile, `.dockerignore`, `deploy/start.py`, `render.yaml`, Java CORS 설정, 프론트 소스·CSS, `frontend/vercel.json`, `.env.production.example` 등을 함께 커밋한다. 실제 `.env`와 서비스 계정은 커밋하지 않는다. 참고 디자인 폴더는 배포에 필요하지 않으며 실제 사용 이미지·당근 지역 JSON은 `frontend/public`에 있다.
 
 로컬 명령은 기존 README대로 사용한다. Docker 실행은 Render 전용 시작 스크립트를 사용하므로 PowerShell·Windows 경로·로컬 `.env`에 의존하지 않는다. Docker 빌드는 Java 패키징 시 테스트를 생략하므로 아래 검증을 별도로 진행해야 한다.
