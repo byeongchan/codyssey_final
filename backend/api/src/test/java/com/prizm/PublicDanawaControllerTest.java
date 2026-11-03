@@ -43,7 +43,7 @@ class PublicDanawaControllerTest {
         var browsing = new DanawaController(sessions, client, observations, "operator", cache);
         var publicApi = new PublicDanawaController(browsing, cache);
         var view = new LiveDataCache.View("key", "price_history", null, "RUNNING", 0, null);
-        when(cache.fetch(eq("price_history"), eq(Map.of("productId", "123")), eq(java.time.Duration.ofHours(6)), any())).thenReturn(view);
+        when(cache.fetch(eq("price_history"), eq(Map.of("productId", "123")), eq(java.time.Duration.ofDays(1)), any(), eq(false))).thenReturn(view);
         when(cache.response(view)).thenReturn(org.springframework.http.ResponseEntity.accepted().build());
         assertEquals(202, publicApi.priceHistory(mapper.readTree("{\"productId\":\"123\"}")).getStatusCode().value());
         assertEquals(400, assertThrows(ResponseStatusException.class, () -> publicApi.priceHistory(mapper.readTree("{\"productId\":\"../x\"}"))).getStatusCode().value());

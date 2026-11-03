@@ -3,8 +3,11 @@ import { DanawaProvider } from './danawa.mjs';
 import { MusinsaProvider } from './musinsa.mjs';
 import { UsedProvider } from './used.mjs';
 
-if ((process.env.APP_ENV ?? 'development') !== 'development' || !['fixture', 'reef-danawa'].includes(process.env.DATA_PROVIDER ?? 'reef-danawa'))
-  throw new Error('Only development fixture mode is implemented');
+const environment = process.env.APP_ENV ?? 'development';
+const provider = process.env.DATA_PROVIDER ?? 'reef-danawa';
+if (!['development', 'production'].includes(environment) || !['fixture', 'reef-danawa'].includes(provider)
+    || environment === 'production' && provider !== 'reef-danawa')
+  throw new Error('Production requires the live reef-danawa provider');
 const live = process.env.REEF_DANAWA_ENABLED === 'true';
 const musinsaLive = process.env.REEF_MUSINSA_ENABLED === 'true';
 const usedLive = process.env.REEF_USED_ENABLED === 'true';

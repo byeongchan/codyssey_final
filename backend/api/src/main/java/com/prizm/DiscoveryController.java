@@ -6,7 +6,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(value = "/api/v1", produces = "application/json")
 public class DiscoveryController {
     private final DiscoveryService service;
     private final CatalogRepository catalog;

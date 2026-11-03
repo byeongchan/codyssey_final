@@ -1,3 +1,4 @@
+import { saveUsedAgentContext, restoreUsedAgentContext } from './usedAgentContext'
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { collectedRequest } from './collectedRequest'
 import type { DanawaSearch } from './Danawa'
@@ -169,7 +170,7 @@ export default function UsedLowestPage({ searchRequest, onBusyChange, onProductC
   }
   function open(item: Item) {
     // Keep only server evidence references so a detail reload can retain the original search scope.
-    try { sessionStorage.setItem(`used-agent-context:${item.provider}:${item.productId}`, JSON.stringify({ context: agentContext, at: Date.now() })) } catch { /* Browser storage may be disabled. */ }
+    saveUsedAgentContext(item.provider, item.productId, currentAgentContext)
     const url = new URL(location.href); url.searchParams.set('category', 'used'); url.searchParams.set('provider', item.provider); url.searchParams.set('product', item.productId); history.pushState(null, '', url)
     void loadDetail(item.provider, item.productId); window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -219,17 +220,9 @@ export default function UsedLowestPage({ searchRequest, onBusyChange, onProductC
     searches: platforms.flatMap(provider => (sources[provider].result?.evidenceIds ?? []).map(id => ({ provider, id }))).slice(0, 3),
     candidates: items.slice(0, 1200).map(item => ({ provider: item.provider, productId: item.productId })),
   }
-  let agentContext: UsedAgentContext = currentAgentContext
-  if (inDetail && product && !agentContext.searches.length) {
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(`used-agent-context:${product.provider}:${product.productId}`) ?? 'null')
-      if (saved && typeof saved.at === 'number' && saved.at <= Date.now() && Date.now() - saved.at < 86400000
-        && Array.isArray(saved.context?.searches) && saved.context.searches.length <= 3
-        && saved.context.searches.every((row: { provider: string; id: string }) => row && ['karrot', 'joongna'].includes(row.provider) && typeof row.id === 'string' && /^[a-f0-9]{64}$/.test(row.id))
-        && Array.isArray(saved.context?.candidates) && saved.context.candidates.length <= 1200
-        && saved.context.candidates.every((row: { provider: string; productId: string }) => row && ['karrot', 'joongna'].includes(row.provider) && typeof row.productId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(row.productId))) agentContext = saved.context
-    } catch { /* No saved search scope: analyze only the available detail. */ }
-  }
+  const agentContext: UsedAgentContext = inDetail && product
+    ? restoreUsedAgentContext(product.provider, product.productId) ?? { searches: [], candidates: [] }
+    : currentAgentContext
   const agentEvidenceKey = JSON.stringify([detailEvidence, agentContext, applied.current])
   const searchAgentContext = {
     searches: agentContext.searches,
@@ -244,7 +237,7 @@ export default function UsedLowestPage({ searchRequest, onBusyChange, onProductC
       {detailBusy && <p role="status" className="used-notice">매물 정보를 불러오는 중입니다.</p>}
       {detailError && <div role="alert" className="used-error">{detailError}<button type="button" onClick={() => { const p = new URLSearchParams(location.search); const source = p.get('provider'); if (source === 'joongna' || source === 'karrot') void loadDetail(source, p.get('product') ?? '') }}>다시 시도</button></div>}
       {product && <div className="used-detail-layout grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]"><div className="used-detail"><div><Photo item={{ image: photo, title: product.title }} large/>{product.images.length > 1 && <div className="used-thumbnails">{product.images.map((image, i) => <button key={image} type="button" aria-label={`${i + 1}번 사진`} aria-pressed={photo === image} onClick={() => setPhoto(image)}><img src={image} alt="" loading="lazy" referrerPolicy="no-referrer"/></button>)}</div>}</div><div className="used-panel used-detail-info"><span className={`used-platform used-platform-${product.provider}`}>{providerName(product.provider)}</span><h1>{product.title}</h1><p className="used-detail-price">{money(product.price)}</p><p className="used-muted">{status(product)}{product.regionName ? ` · ${product.regionName}` : ''}</p>{product.sellerName && <p className="used-muted">판매자 {product.sellerName}{product.mannerScore !== null ? ` · 매너온도 ${product.mannerScore}°C` : ''}</p>}<p className="used-description">{product.description || '상품 설명이 제공되지 않았습니다.'}</p>{product.deliveryOptions && <p className="used-muted">거래 방식: {product.deliveryOptions}</p>}<div className="used-detail-actions">{product.url && <a className="used-primary" href={product.url} target="_blank" rel="noopener noreferrer">{providerName(product.provider)}에서 매물 확인<Icon name="external" size={15}/></a>}<WishlistButton provider={product.provider} productId={product.productId} onLogin={onLogin}/><button type="button" disabled={detailBusy} className="used-secondary" onClick={() => void loadDetail(product.provider, product.productId, true)}>매물 정보 갱신</button></div><p className="used-muted">저장된 표시 정보입니다. 실제 가격·상태·거래 가능 여부는 원본에서 확인해 주세요.</p></div></div>
-        <aside className="min-w-0 self-start xl:sticky xl:top-44" aria-label="중고 매물 구매 상담">{!detailBusy && <UsedAgentChat provider={product.provider} productId={product.productId} title={product.title} context={agentContext} evidenceKey={agentEvidenceKey} onLogin={onLogin}/>}</aside>
+        <aside className="used-agent-detail-sidebar min-w-0 self-start" aria-label="중고 매물 구매 상담">{!detailBusy && <UsedAgentChat provider={product.provider} productId={product.productId} title={product.title} context={agentContext} evidenceKey={agentEvidenceKey} onLogin={onLogin}/>}</aside>
       </div>}
     </> : <>
       <header className="used-hero"><span className="used-eyebrow"><span className="live-dot"/>중고나라 · 당근 통합 검색</span><h1>흩어진 중고 매물,<br/><em>한곳에서 가격 비교</em></h1><p>찾는 상품을 검색하고, 플랫폼별 매물과 표시 가격을 함께 확인하세요.</p></header>

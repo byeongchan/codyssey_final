@@ -93,8 +93,8 @@ JSON의 answer(4000자 이하), sellerNotes(최대5개)만 반환한다. 판단�
 
 
 class GeminiUsedAgent(GeminiExplanationProvider):
-    request_timeout = 60.0
-    response_timeout = 75.0
+    request_timeout = 120.0
+    response_timeout = 135.0
 
     def explain(self, evidence, question, history):
         detail = evidence.get('mode') == 'detail'

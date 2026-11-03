@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me/musinsa/wishlist")
+@RequestMapping(value = "/api/v1/me/musinsa/wishlist", produces = "application/json")
 public class MusinsaWishlistController {
     private final FirebaseAccess firebase; private final SessionVerifier sessions; private final ObjectMapper mapper;
     public MusinsaWishlistController(FirebaseAccess firebase,SessionVerifier sessions,ObjectMapper mapper) { this.firebase=firebase; this.sessions=sessions; this.mapper=mapper; }

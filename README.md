@@ -18,6 +18,8 @@
 
 ## 시스템 구성
 
+Render 백엔드·Vercel 프론트엔드 배포는 [배포 안내](docs/DEPLOYMENT.md)를 참고하세요. 저장소 루트 Dockerfile은 API·수집기·AI를 하나의 Render 서비스에서 실행하며, 로컬 실행 방법은 아래와 같습니다.
+
 | 구성 요소 | 역할 | 로컬 포트 |
 | --- | --- | --- |
 | React · TypeScript · Vite | 사용자 화면, Firebase 로그인 | 5173 |

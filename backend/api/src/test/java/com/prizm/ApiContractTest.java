@@ -75,8 +75,9 @@ class ApiContractTest {
         try (InputStream input = getClass().getResourceAsStream("/static/openapi.json")) {
             assertNotNull(input); JsonNode spec = mapper.readTree(input);
             Set<String> routes = new HashSet<>();
-            for (Class<?> controller : List.of(ApiController.class, MeController.class, AlertController.class, HistoryController.class, AccountDeletionController.class, ChatController.class, DiscoveryController.class, CollectionController.class, SnapshotController.class, CatalogSourceController.class, SnapshotRetentionController.class, OperationsController.class, DanawaController.class, DanawaExplanationController.class, PublicDanawaController.class, DanawaWishlistController.class, PriceAgentController.class)) for (var method : controller.getDeclaredMethods()) {
-                String prefix = controller.getAnnotation(org.springframework.web.bind.annotation.RequestMapping.class).value()[0].substring("/api/v1".length());
+            for (Class<?> controller : List.of(ApiController.class, MeController.class, AlertController.class, HistoryController.class, AccountDeletionController.class, ChatController.class, DiscoveryController.class, CollectionController.class, SnapshotController.class, CatalogSourceController.class, SnapshotRetentionController.class, OperationsController.class, DanawaController.class, DanawaExplanationController.class, PublicDanawaController.class, DanawaWishlistController.class, PriceAgentController.class, MemberProfileController.class)) for (var method : controller.getDeclaredMethods()) {
+                var mapping = controller.getAnnotation(org.springframework.web.bind.annotation.RequestMapping.class);
+                String prefix = mapping == null || mapping.value().length == 0 ? "" : mapping.value()[0].replaceFirst("^/api/v1", "");
                 var get = method.getAnnotation(GetMapping.class);
                 var post = method.getAnnotation(PostMapping.class);
                 var put = method.getAnnotation(PutMapping.class);
@@ -88,6 +89,7 @@ class ApiContractTest {
                 if (delete != null) routes.add("delete " + prefix + delete.value()[0]);
                 if (patch != null) routes.add("patch " + prefix + patch.value()[0]);
             }
+            routes = routes.stream().map(route -> route.replace(" /api/v1", " ")).collect(java.util.stream.Collectors.toSet());
             Set<String> documented = new HashSet<>();
             spec.path("paths").fields().forEachRemaining(path -> path.getValue().fieldNames()
                     .forEachRemaining(verb -> documented.add(verb + " " + path.getKey())));

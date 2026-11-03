@@ -1,0 +1,25 @@
+**/.env
+**/.env.*
+**/node_modules
+**/target
+**/dist
+**/__pycache__
+.git
+.venv
+secrets
+credentials
+**/*service-account*.json
+**/*serviceAccount*.json
+**/*firebase-adminsdk*.json
+**/*credentials*.json
+**/*.pem
+**/*.key
+frontend
+docs
+사이트
+사이트2
+ai 비교 사이트
+로그인 베이스 코드
+중고최저가_구성화면
+당근 마켓 리전 코드
+줍줍이

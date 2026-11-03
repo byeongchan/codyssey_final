@@ -13,7 +13,7 @@ import java.util.*;
 
 /** Read-only stored evidence. Never fetches more listings, news, specs or images. */
 @RestController
-@RequestMapping("/api/v1/me/used/agent")
+@RequestMapping(value = "/api/v1/me/used/agent", produces = "application/json")
 public class UsedAgentController {
     private final SessionVerifier sessions; private final FirebaseAccess firebase; private final LiveDataCache cache;
     private final ObjectMapper mapper; private final AnalysisQuota quota; private final String aiUrl,key,model;
@@ -51,7 +51,7 @@ public class UsedAgentController {
         }
         var uri=URI.create(aiUrl);
         if(!"http".equals(uri.getScheme()) || !Set.of("localhost","127.0.0.1").contains(Objects.toString(uri.getHost(),"")) || uri.getUserInfo()!=null || uri.getQuery()!=null || uri.getFragment()!=null || !Set.of("","/").contains(uri.getPath()) || key.isBlank()) throw new IllegalArgumentException();
-        var request=java.net.http.HttpRequest.newBuilder(uri.resolve("/internal/used-agent/analyze")).timeout(Duration.ofSeconds(85))
+        var request=java.net.http.HttpRequest.newBuilder(uri.resolve("/internal/used-agent/analyze")).timeout(Duration.ofSeconds(150))
             .header("Content-Type","application/json").header("X-Internal-Key",key)
             .POST(java.net.http.HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(Map.of("evidence",modelFacts,"evidenceVersion",version,"question",question,"history",history,"model",model)))).build();
         var response=http.send(request,HttpResponse.BodyHandlers.ofInputStream());

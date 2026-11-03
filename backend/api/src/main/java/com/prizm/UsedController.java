@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/used")
+@RequestMapping(value = "/api/v1/used", produces = "application/json")
 public class UsedController {
     private final UsedClient client; private final LiveDataCache cache;
     public UsedController(UsedClient client, LiveDataCache cache) { this.client=client; this.cache=cache; }

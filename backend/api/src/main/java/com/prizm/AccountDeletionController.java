@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me")
+@RequestMapping(value = "/api/v1/me", produces = "application/json")
 public class AccountDeletionController {
     @org.springframework.beans.factory.annotation.Value("${prizm.firebase.mode:emulator}") private String firebaseMode = "emulator";
     private final SessionVerifier sessions;

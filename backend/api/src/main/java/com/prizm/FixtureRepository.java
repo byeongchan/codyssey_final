@@ -17,7 +17,7 @@ public class FixtureRepository implements CatalogRepository {
     public FixtureRepository(ObjectMapper mapper, @Value("${prizm.fixtures}") String directory,
             @Value("${prizm.provider}") String provider, @Value("${prizm.environment}") String environment,
             @Value("${prizm.reference-time}") String referenceOverride) throws IOException {
-        if ("reef-danawa".equals(provider) && "development".equals(environment)) {
+        if ("reef-danawa".equals(provider) && Set.of("development", "production").contains(environment)) {
             catalog = mapper.createObjectNode(); prices = mapper.createObjectNode();
             referenceTime = java.time.Instant.now().toString(); dataVersion = "live-no-fixtures";
             return;

@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: joopjoop-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: INTERNAL_API_KEY
+        generateValue: true
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: /etc/secrets/firebase-service-account.json
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: REEF_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false
+      - key: NEWS_PROVIDER
+        value: naver
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      - key: REEF_DANAWA_ENABLED
+        value: "true"
+      - key: REEF_MUSINSA_ENABLED
+        value: "true"
+      - key: REEF_USED_ENABLED
+        value: "true"
+      - key: ALERT_SCHEDULER_ENABLED
+        value: "false"
+      - key: SNAPSHOT_ALERT_EVENTS_ENABLED
+        value: "false"
+      - key: LIVE_REFRESH_ENABLED
+        value: "false"

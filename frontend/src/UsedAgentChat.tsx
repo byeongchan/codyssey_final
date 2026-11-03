@@ -1,3 +1,5 @@
+import { useFloatingAgent } from './floatingTools'
+import { createPortal } from 'react-dom'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ApiRequestError, request } from './api'
 import { useSession } from './session'
@@ -140,25 +142,28 @@ function ProductGroupCard({ group }: { group: ProductGroup }) {
   </div>
 }
 
-function Distribution({ data }: { data: Answer }) {
+function DistributionContent({ data, view }: { data: Answer; view: 'price' | 'models' | 'regions' }) {
   const maxCount = Math.max(1, ...(data.distribution ?? []).map(bin => bin.count))
   return <div className="used-agent-distribution">
     <p className="text-xs font-black">{data.headline}</p>
     <dl>{([['최저가', data.low], ['평균가', data.average], ['최고가', data.high]] as const).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{typeof value === 'number' ? money(value) : '—'}</dd></div>)}</dl>
     <p className="text-[10px] text-[var(--muted)]">분석 {data.analyzedCount ?? 0}개 · 제외 {data.excludedCount ?? 0}개{data.lowPriceExcludedCount ? ` (저가 의심 ${data.lowPriceExcludedCount}개)` : ''}</p>
     {!!data.unknownStatusCount && <p className="text-[10px] text-[var(--muted)]">판매 상태 미확인 {data.unknownStatusCount}개 포함</p>}
+    {view === 'price' && <>
     {typeof data.centralLow === 'number' && <p className="text-xs font-bold">중앙 50% 가격대 {money(data.centralLow)} ~ {money(data.centralHigh!)}</p>}
     <div role="list" aria-label="검색 매물 가격 분포">{data.distribution?.map(bin => <div key={bin.from} role="listitem" className="used-agent-bin"><span>{money(bin.from)} ~ {money(bin.to)} 미만</span><div className="used-agent-bar" aria-hidden="true"><span className={bin.dominant ? 'is-dominant' : ''} style={{ width: `${bin.count / maxCount * 100}%` }}/></div><span>{bin.count}개 · {bin.share}%</span></div>)}</div>
     {!!data.distribution?.length && <p className="text-[10px] text-[var(--muted)]">강조된 막대는 매물이 가장 많은 구간입니다. 여러 구간이 동률일 수 있습니다.</p>}
-    {data.regionSummary && <RegionDistribution data={data.regionSummary}/>}
-    {data.productGroups && <div className="mt-3 space-y-2 border-t border-[var(--line)] pt-3 text-[10px] leading-5">
+    {!data.distribution?.length && <p>가격 분포를 표시할 자료가 없습니다.</p>}
+    </>}
+    {view === 'regions' && (data.regionSummary ? <RegionDistribution data={data.regionSummary}/> : <p>지역 집계 자료가 없습니다.</p>)}
+    {view === 'models' && (data.productGroups ? <div className="mt-3 space-y-2 border-t border-[var(--line)] pt-3 text-[10px] leading-5">
       <h4 className="text-xs font-bold">모델·상품 종류별 가격대</h4>
       <p>{data.productGroups.groupCount}개 그룹 · 분류 불명확 {data.productGroups.unclassifiedCount}개</p>
       <p className="text-[var(--muted)]">용량·색상·구성품으로 나누지 않은 참고 가격입니다. 모델명이 없으면 상품 종류로 분류합니다.</p>
-      <div className="max-h-96 space-y-2 overflow-y-auto">{data.productGroups.groups.map(group => <ProductGroupCard key={`${group.kind}:${group.name}`} group={group}/>)}</div>
+      <div className="space-y-2">{[...data.productGroups.groups].sort((a, b) => b.count - a.count).map(group => <details key={`${group.kind}:${group.name}`} className="used-analysis-group"><summary>{group.name} <span>조회 {group.count}개</span></summary><ProductGroupCard group={group}/></details>)}</div>
       {data.productGroups.omittedGroupCount > 0 && <p>매물 수가 많은 상위 40개 그룹 표시 · 그 외 {data.productGroups.omittedGroupCount}개 그룹</p>}
       <p className="text-[var(--muted)]">{data.productGroups.basis}</p>
-    </div>}
+    </div> : <p>모델·상품 종류별 집계 자료가 없습니다.</p>)}
     <details className="text-[10px] leading-5"><summary className="cursor-pointer font-bold">제외 기준과 분석 한계</summary><ul className="mt-2 space-y-1">{data.limitations.map((text, i) => <li key={i}>• {text}</li>)}</ul>
       {(data.excludedCount ?? 0) > (data.excludedListings?.length ?? 0) && <p className="mt-2">제외 매물은 최대 40개까지 표시합니다.</p>}
       {(data.excludedListings?.length ?? 0) > 0 && <ul className="mt-3 max-h-48 space-y-2 overflow-y-auto" aria-label="분석 제외 매물">{data.excludedListings?.map(item => <li key={`${item.provider}:${item.productId}`}><strong>{item.title || <>{item.provider === 'karrot' ? '당근' : '중고나라'} · {item.productId}</>}</strong><br/>{item.price === null ? '가격 미확인' : money(item.price)} · {item.reason}</li>)}</ul>}
@@ -166,14 +171,42 @@ function Distribution({ data }: { data: Answer }) {
   </div>
 }
 
+function Distribution({ data }: { data: Answer }) {
+  const [open, setOpen] = useState(false)
+  return <><button type="button" className="used-analysis-trigger" onClick={() => setOpen(true)}>가격 분포·지역·모델별 분석 보기</button>{open && <AnalysisDialog data={data} onClose={() => setOpen(false)}/>}</>
+}
+
+function AnalysisDialog({ data, onClose }: { data: Answer; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  const body = useRef<HTMLDivElement>(null)
+  const [view, setView] = useState<'price' | 'models' | 'regions'>('price')
+  useEffect(() => {
+    const element = dialog.current
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    element?.showModal()
+    return () => { element?.close(); document.body.style.overflow = overflow; if (previous?.isConnected) previous.focus({ preventScroll: true }) }
+  }, [])
+  return createPortal(<dialog ref={dialog} className="used-analysis-dialog" aria-label="검색 결과 상세 분석" onCancel={event => { event.preventDefault(); onClose() }} onClick={event => { if (event.target === event.currentTarget) onClose() }}>
+    <div className="used-analysis-shell"><header><div><h2>검색 결과 상세 분석</h2><p>조회한 매물의 판매 희망가 기준 참고 자료입니다.</p></div><button type="button" onClick={onClose} autoFocus>닫기</button></header>
+      <div className="used-analysis-tabs" role="group" aria-label="분석 항목">{([['price', '가격 분포'], ['models', '모델·종류'], ['regions', '지역']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={view === value} onClick={() => { setView(value); if (body.current) body.current.scrollTop = 0 }}>{label}</button>)}</div>
+      <div ref={body} className="used-analysis-body"><DistributionContent key={view} data={data} view={view}/></div>
+    </div>
+  </dialog>, document.querySelector('.app') ?? document.body)
+}
+
 function Conversation({ provider, productId, title, context, listing, initialVersion, onReset }: { provider?: Provider; productId?: string; title: string; context: UsedAgentContext; listing: boolean; initialVersion?: string; onReset?: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]), [text, setText] = useState('')
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [changed, setChanged] = useState(false)
   const version = useRef<string | null>(initialVersion ?? null), active = useRef<AbortController | null>(null)
   const lock = useRef(false)
-  const bottom = useRef<HTMLDivElement>(null)
+  const conversation = useRef<HTMLDivElement>(null)
   useEffect(() => () => active.current?.abort(), [])
-  useEffect(() => { bottom.current?.scrollIntoView({ block: 'nearest' }) }, [messages, busy])
+  useEffect(() => {
+    const log = conversation.current
+    if (log) log.scrollTop = log.scrollHeight
+  }, [messages, busy])
   function reset() { active.current?.abort(); lock.current = false; version.current = null; setMessages([]); setError(''); setChanged(false); setBusy(false); onReset?.() }
   async function send(question: string) {
     const message = question.trim(); if (!message || lock.current || changed) return
@@ -199,7 +232,7 @@ function Conversation({ provider, productId, title, context, listing, initialVer
   }
   function submit(event: FormEvent) { event.preventDefault(); void send(text) }
   return <>
-    <div className={`chat-scroll ${listing ? 'h-[300px] sm:h-[340px]' : 'h-[400px] sm:h-[480px]'} space-y-4 overflow-y-auto overscroll-contain p-5`} role="log" aria-label="중고 매물 상담 대화" aria-live="polite">
+    <div ref={conversation} className={`chat-scroll ${listing ? 'h-[300px] sm:h-[340px]' : 'h-[400px] sm:h-[480px]'} space-y-4 overflow-y-auto overscroll-contain p-5`} role="log" aria-label="중고 매물 상담 대화" aria-live="polite">
       <div className="rounded-2xl bg-[var(--surface-2)] p-4 text-xs leading-6"><p className="font-black">{title}</p><p className="mt-2 text-[var(--muted)]">{listing ? '검색된 매물의 가격 분포와 이상 저가 제외 결과를 질문해 주세요. 다른 모델·상태가 섞인 검색 결과이므로 적정 시세로 단정하지 않습니다.' : '상세 설명에서 확인할 내용과 앞서 검색한 가격대 안에서 이 매물의 가격 위치를 함께 살펴봅니다.'}</p></div>
       {messages.map((message, i) => message.role === 'user'
         ? <div key={i} className="flex justify-end"><p className="max-w-[95%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-[var(--primary)] px-4 py-3 text-xs leading-6 text-white">{message.content}</p></div>
@@ -222,7 +255,6 @@ function Conversation({ provider, productId, title, context, listing, initialVer
         </article></div>)}
       {busy && <Loading showLabel label="잠시만 기다려주세요. 답변을 생성하는 중입니다."/>}
       {error && <p role="alert" className="text-xs text-rose-500">{error}</p>}
-      <div ref={bottom}/>
     </div>
     <div className="border-t border-[var(--line)] p-4">
       <div className="mb-3 flex gap-2 overflow-x-auto">{(listing ? searchSuggestions : suggestions).map(question => <button key={question} type="button" disabled={busy || changed} onClick={() => void send(question)} className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--muted)] disabled:opacity-40">{question}</button>)}</div>
@@ -240,6 +272,13 @@ export default function UsedAgentChat({ provider, productId, title, context, evi
   provider?: Provider; productId?: string; title: string; context: UsedAgentContext; evidenceKey: string; onLogin: () => void; listing?: boolean; disabled?: boolean
 }) {
   const { user, ready } = useSession()
+  const { panelOpen, setPanelOpen } = useFloatingAgent()
+  const launcher = useRef<HTMLButtonElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
+  function closePanel() { setPanelOpen(false); document.getElementById('shopping-tools-trigger')?.focus({ preventScroll: true }) }
+  useEffect(() => {
+    if (panelOpen) closeButton.current?.focus({ preventScroll: true })
+  }, [panelOpen])
   const [summary, setSummary] = useState<Answer | null>(null), [summaryError, setSummaryError] = useState('')
   const [summaryBusy, setSummaryBusy] = useState(false), [revision, setRevision] = useState(0)
   useEffect(() => {
@@ -252,11 +291,15 @@ export default function UsedAgentChat({ provider, productId, title, context, evi
       .finally(() => { if (!abort.signal.aborted) setSummaryBusy(false) })
     return () => abort.abort()
   }, [listing, ready, user?.uid, evidenceKey, disabled, revision])
-  return <section className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]" aria-label="중고 AI 구매 비서">
+  return <>
+    <button ref={launcher} type="button" className="used-agent-launcher" aria-expanded={panelOpen} onClick={() => setPanelOpen(!panelOpen)}>AI 구매 비서</button>
+    <section className={`used-agent-panel ${panelOpen ? 'is-open' : ''} overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]`} aria-label="중고 AI 구매 비서" onKeyDown={event => { if (event.key === 'Escape' && panelOpen) { event.stopPropagation(); closePanel() } }}>
+    <button ref={closeButton} type="button" className="used-agent-close" onClick={closePanel}>상담창 닫기</button>
     <div className="ai-header flex items-center justify-between gap-3 p-5 text-white"><div className="flex items-center gap-3"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white bg-white"><img src={`${import.meta.env.BASE_URL}brand/ai-assistant-joopjoop.png`} alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0 object-contain -scale-x-100"/></span><div><h2 className="text-sm font-black">줍줍각 AI 구매 비서</h2><p className="mt-1 text-[10px] text-white/65">조회한 중고 매물 기준 구매 상담</p></div></div><span className="shrink-0 rounded-full border border-white/15 px-2 py-1 text-[9px] font-bold">BETA</span></div>
-    {listing && ready && user && <div className="border-b border-[var(--line)] p-4">{summaryBusy ? <Loading label="가격 분포를 확인하고 있습니다"/> : summary ? <Distribution data={summary}/> : <p className="text-xs text-[var(--muted)]">{disabled ? '검색이 완료되면 가격 분포를 확인합니다.' : '상품을 검색하면 가격 분포를 분석합니다.'}</p>}{summaryError && <p role="alert" className="mt-2 text-xs text-rose-500">{summaryError}<button className="ml-2 underline" type="button" onClick={() => setRevision(value => value + 1)}>다시 확인</button></p>}</div>}
+    {!listing && ready && user && !context.searches.length && <p className="border-b border-[var(--line)] p-4 text-xs text-[var(--muted)]">연결된 검색 비교 자료가 없거나 보관 기간(24시간)이 지났습니다. 현재 상품의 상세 정보를 기준으로 분석합니다. 가격대·지역 비교를 보려면 다시 검색한 목록에서 상품을 열어 주세요.</p>}
+    {listing && ready && user && <div className="border-b border-[var(--line)] p-4">{summaryBusy ? <Loading label="가격 분포를 확인하고 있습니다"/> : summary ? <><div className="used-agent-quick-prices">{([['최저가', summary.low], ['평균가', summary.average], ['최고가', summary.high]] as const).map(([label, value]) => <div key={label}><span>{label}</span><strong>{typeof value === 'number' ? money(value) : '—'}</strong></div>)}</div><p className="mt-2 text-[10px] text-[var(--muted)]">분석 {summary.analyzedCount ?? 0}개 · 제외 {summary.excludedCount ?? 0}개</p><Distribution data={summary}/></> : <p className="text-xs text-[var(--muted)]">{disabled ? '검색이 완료되면 가격 분포를 확인합니다.' : '상품을 검색하면 가격 분포를 분석합니다.'}</p>}{summaryError && <p role="alert" className="mt-2 text-xs text-rose-500">{summaryError}<button className="ml-2 underline" type="button" onClick={() => setRevision(value => value + 1)}>다시 확인</button></p>}</div>}
     {!listing && ready && user && context.searches.length > 0 && <div className="border-b border-[var(--line)] p-4 text-xs">{summaryBusy ? <Loading label="검색 가격대와 지역 정보를 확인하고 있습니다"/> : summary ? <details><summary className="cursor-pointer font-bold">검색 결과 참고 · 가격대와 지역 분포</summary><p className="my-2 text-[var(--muted)]">다른 모델·상태가 섞일 수 있는 검색 전체 집계입니다. 동일 조건 가격 비교와 구분합니다.</p><Distribution data={summary}/></details> : null}{summaryError && <p role="alert" className="text-rose-500">{summaryError}<button type="button" className="ml-2 underline" onClick={() => setRevision(value => value + 1)}>다시 확인</button></p>}</div>}
     {ready && user ? listing && (!summary || disabled) ? <p className="p-5 text-xs text-[var(--muted)]">검색 결과 분석이 준비되면 질문할 수 있습니다.</p> : <Conversation key={`${user.uid}:${provider}:${productId}:${evidenceKey}:${listing ? summary?.evidenceVersion : ''}`} provider={provider} productId={productId} title={title} context={context} listing={listing} initialVersion={listing ? summary?.evidenceVersion : undefined} onReset={listing ? () => setRevision(value => value + 1) : undefined}/>
       : <div className="p-6 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--mint-soft)] text-[var(--mint)]"><Icon name="user" size={23}/></span><p className="mt-4 text-sm font-black">로그인하고 AI 구매 비서와 대화하세요</p><p className="mt-2 text-xs leading-6 text-[var(--muted)]">{listing ? '검색된 매물의 가격 분포와 이상 저가 제외 결과를 확인할 수 있어요.' : '선택한 중고 매물의 가격과 구매 전 확인 사항을 상담할 수 있어요.'}</p><button className="mt-5 w-full rounded-xl bg-[var(--primary)] py-3 text-xs font-bold text-white disabled:opacity-40" type="button" disabled={!ready} onClick={onLogin}>로그인하기</button></div>}
-  </section>
+  </section></>
 }

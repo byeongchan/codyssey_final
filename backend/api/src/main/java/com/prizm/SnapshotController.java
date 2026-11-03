@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(value = "/api/v1", produces = "application/json")
 public class SnapshotController {
     private final FixtureSnapshots snapshots;
     private final CatalogRepository catalog;

@@ -703,7 +703,12 @@ form:has(> input) > svg {
 .prizm-hero-track { transition: transform 0.6s ease-in-out; }
 
 .recent-products-rail { display: none; }
-.recent-products-mobile { display: block; }
+.recent-products-mobile { display: block; bottom: calc(16px + env(safe-area-inset-bottom)); }
+.floating-tools-menu { min-width: 200px; }
+.floating-tools-menu > button { display: block; width: 100%; padding: 12px; border-radius: 10px; text-align: left; font-size: 12px; font-weight: 700; }
+.floating-tools-menu > button:hover { background: var(--surface-2); color: var(--primary); }
+/* The shared shopping tools button opens either panel on small screens. */
+.app .price-agent-launcher, .app .used-agent-launcher { display: none; }
 
 @media (min-width: 1680px) {
   .recent-products-rail {

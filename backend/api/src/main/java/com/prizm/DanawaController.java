@@ -9,7 +9,7 @@ import java.util.*;
 
 /** Public browsing helpers and operator-only observation/analysis operations. No fixture writes. */
 @RestController
-@RequestMapping("/api/v1/me")
+@RequestMapping(value = "/api/v1/me", produces = "application/json")
 public class DanawaController {
     private final SessionVerifier sessions;
     private final DanawaClient client;

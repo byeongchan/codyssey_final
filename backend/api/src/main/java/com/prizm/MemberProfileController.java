@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
+@RequestMapping(produces = "application/json")
 public class MemberProfileController {
     private final SessionVerifier sessions;
     private final FirebaseAccess firebase;

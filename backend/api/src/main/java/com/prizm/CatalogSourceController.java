@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(value = "/api/v1", produces = "application/json")
 public class CatalogSourceController {
     private final SnapshotCatalogRepository catalog;
     public CatalogSourceController(SnapshotCatalogRepository catalog) { this.catalog = catalog; }

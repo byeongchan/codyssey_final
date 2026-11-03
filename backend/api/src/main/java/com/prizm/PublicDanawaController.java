@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 /** Public browsing shares input validation, collector cache and upstream request limits. */
 @RestController
-@RequestMapping("/api/v1/danawa")
+@RequestMapping(value = "/api/v1/danawa", produces = "application/json")
 public class PublicDanawaController {
     private final DanawaController danawa;
     private final LiveDataCache cache;

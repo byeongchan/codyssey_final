@@ -1,0 +1,49 @@
+.price-agent-panel {
+  display: flex;
+  flex-direction: column;
+  height: min(720px, calc(100dvh - 190px));
+  min-height: 0;
+}
+.price-agent-panel > * { flex-shrink: 0; }
+.price-agent-panel > .chat-scroll {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+  overflow-anchor: none;
+}
+.price-agent-panel > .ai-header { padding: 14px 16px; }
+.price-agent-panel > .border-t { padding: 12px; }
+.price-agent-launcher, .price-agent-close { display: none; }
+@media (max-width: 1279px) {
+  .price-agent-panel { display: none; }
+  .price-agent-panel.is-open {
+    display: flex;
+    position: fixed;
+    z-index: 70;
+    inset: auto 12px calc(76px + env(safe-area-inset-bottom));
+    width: auto;
+    height: min(720px, calc(100dvh - 100px - env(safe-area-inset-bottom)));
+  }
+  .price-agent-launcher {
+    display: block;
+    position: fixed;
+    z-index: 71;
+    right: 16px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    padding: 13px 20px;
+    border-radius: 24px;
+    background: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: var(--shadow-lg);
+  }
+  .price-agent-close {
+    display: block;
+    padding: 8px 16px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface);
+  }
+}

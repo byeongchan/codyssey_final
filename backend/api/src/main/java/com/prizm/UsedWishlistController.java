@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me/used/wishlist")
+@RequestMapping(value = "/api/v1/me/used/wishlist", produces = "application/json")
 public class UsedWishlistController {
     private final FirebaseAccess firebase; private final SessionVerifier sessions; private final ObjectMapper mapper;
     public UsedWishlistController(FirebaseAccess firebase,SessionVerifier sessions,ObjectMapper mapper) { this.firebase=firebase; this.sessions=sessions; this.mapper=mapper; }

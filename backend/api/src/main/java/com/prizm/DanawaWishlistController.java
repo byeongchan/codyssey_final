@@ -7,7 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me/danawa/wishlist")
+@RequestMapping(value = "/api/v1/me/danawa/wishlist", produces = "application/json")
 public class DanawaWishlistController {
     private final SessionVerifier sessions;
     private final DanawaWishlist wishlist;

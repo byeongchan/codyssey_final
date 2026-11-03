@@ -22,8 +22,9 @@ from .product_identity import identify
 AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "")
 _agent_logger = logging.getLogger("uvicorn.error")
-if os.getenv("APP_ENV", "development") != "development" or AI_PROVIDER not in {"fixture", "gemini"}:
-    raise RuntimeError("Only development fixture/gemini explanation modes are implemented")
+environment = os.getenv("APP_ENV", "development")
+if environment not in {"development", "production"} or AI_PROVIDER not in {"fixture", "gemini"} or (environment == "production" and AI_PROVIDER != "gemini"):
+    raise RuntimeError("Production requires the Gemini provider")
 INTERNAL_KEY = os.getenv("INTERNAL_API_KEY", "")
 if not INTERNAL_KEY:
     raise RuntimeError("Set INTERNAL_API_KEY before starting the AI service")

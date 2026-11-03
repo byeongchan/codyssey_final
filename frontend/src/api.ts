@@ -31,9 +31,14 @@ export async function request<T>(path: string, signal?: AbortSignal, method: 'GE
   if (protectedPath) await auth?.authStateReady()
   const owner = initialOwner ?? auth?.currentUser?.uid
   const url = `${import.meta.env.VITE_API_BASE_URL || '/api/v1'}${path}`
-  const timeout = body instanceof FormData ? 60000 : path.startsWith('/me/used/agent/') ? 180000 : path.startsWith('/me/danawa/agent/') ? 120000 : path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : path.startsWith('/danawa/') ? 30000 : 12000
-  if (protectedPath && new URL(url, location.origin).origin !== location.origin)
-    throw new Error('로그인 요청은 같은 사이트의 API로만 전송할 수 있습니다.')
+  const timeout = body instanceof FormData ? 60000 : path.startsWith('/me/used/agent/') ? 240000 : path.startsWith('/me/danawa/agent/') ? 240000 : path.startsWith('/me/danawa/explanation/') ? 35000 : path === '/me/danawa/observations' ? 22000 : path.startsWith('/danawa/') ? 30000 : 12000
+  if (protectedPath && new URL(url, location.origin).origin !== location.origin) {
+    // Only the API origin explicitly baked into this build may receive Firebase tokens.
+    const configured = new URL(import.meta.env.VITE_API_BASE_URL || '/api/v1', location.origin)
+    if (configured.protocol !== 'https:' || configured.username || configured.password || configured.search || configured.hash
+      || new URL(url, location.origin).origin !== configured.origin)
+      throw new Error('배포 설정에 지정한 HTTPS API로만 로그인 요청을 전송할 수 있습니다.')
+  }
   const send = async (refresh: boolean) => {
     const headers: Record<string, string> = {}
     if (body !== undefined && !(body instanceof FormData)) headers['Content-Type'] = 'application/json'

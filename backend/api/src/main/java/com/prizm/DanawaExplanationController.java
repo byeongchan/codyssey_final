@@ -11,7 +11,7 @@ import java.time.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me/danawa")
+@RequestMapping(value = "/api/v1/me/danawa", produces = "application/json")
 public class DanawaExplanationController {
     private final SessionVerifier sessions;
     private final DanawaObservations observations;

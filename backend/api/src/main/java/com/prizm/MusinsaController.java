@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/musinsa")
+@RequestMapping(value = "/api/v1/musinsa", produces = "application/json")
 public class MusinsaController {
     public static final Set<String> CATEGORIES=Set.of("001","002","003","100","103","004","017");
     private final MusinsaClient client; private final LiveDataCache cache;

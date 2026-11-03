@@ -11,7 +11,7 @@ function pause(ms: number, signal: AbortSignal): Promise<void> {
 }
 /** Polling only reads Firestore job state; it never creates another collection job. */
 export async function collectedRequest<T>(path: string, signal: AbortSignal, body: unknown, progress?: (message: string) => void, jobPrefix?: string): Promise<Single<T>> {
-  const bounded = AbortSignal.any([signal, AbortSignal.timeout(path.startsWith('/me/danawa/agent/') ? 125000 : 180000)])
+  const bounded = AbortSignal.any([signal, AbortSignal.timeout(path.startsWith('/me/danawa/agent/') ? 245000 : 180000)])
   try {
   let response = await request<Single<T | null>>(path, bounded, 'POST', body)
   const usedSearch = /^\/used\/(joongna|karrot)\/search$/.test(path)

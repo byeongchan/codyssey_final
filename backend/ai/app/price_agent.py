@@ -33,8 +33,8 @@ class AgentText(BaseModel):
 
 
 class GeminiPriceAgent(GeminiExplanationProvider):
-    request_timeout = 60.0
-    response_timeout = 75.0
+    request_timeout = 120.0
+    response_timeout = 135.0
     def explain(self, evidence, intent, question="", history=None):
         prompt = SYSTEM_PROMPT
         assessment = evidence["assessment"]

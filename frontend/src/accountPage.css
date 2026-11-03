@@ -87,9 +87,11 @@ button.account-stat:hover:not(:disabled) { border-color: var(--primary); transfo
 .account-small-button { font-size: 10px; border-radius: 9px; padding: 8px 12px; }
 .account-small-button:hover:not(:disabled) { background: var(--primary-glow); border-color: var(--primary); }
 .account-details > [role=status], .account-details > [role=alert] { margin-top: 12px; border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
-.account-management-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--subtle); font-size: 10px; }
+.account-management-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--subtle); font-size: 10px; }
 .account-management-footer > p { display: flex; gap: 6px; align-items: center; }
-.account-management-footer > button:hover:not(:disabled) { color: var(--primary); }
+.account-management-footer > button { flex-shrink: 0; min-width: 112px; min-height: 44px; padding: 10px 20px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 700; }
+.account-management-footer > button:hover:not(:disabled) { color: var(--primary); border-color: var(--primary); background: var(--primary-glow); }
+.account-management-footer > button:disabled { opacity: .5; }
 .account-delete { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
 .account-delete > summary { cursor: pointer; font-size: 10px; color: var(--muted); }
 .account-dashboard button:disabled { cursor: default; }

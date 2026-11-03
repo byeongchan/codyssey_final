@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/me")
+@RequestMapping(value = "/api/v1/me", produces = "application/json")
 public class ChatController {
     private final SessionVerifier sessions;
     private final ChatStore store;

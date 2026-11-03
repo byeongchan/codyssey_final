@@ -7,7 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping(value = "/api/v1", produces = "application/json")
 public class CollectionController {
     private final CollectionJobs jobs;
     private final CatalogRepository catalog;

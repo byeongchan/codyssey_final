@@ -1,8 +1,10 @@
+import { useFloatingAgent } from './floatingTools'
 import Loading from './Loading'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useSession } from './session'
 import { collectedRequest } from './collectedRequest'
 import { Icon } from './Icons'
+import './priceAgentChat.css'
 
 type Article = { originalUrl?: string | null; naverUrl?: string | null; relevanceScore?: number; assessmentStage?: string; priceImpact?: string; reportedFacts?: string[]; impactPath?: string[]; uncertainties?: string[]; eventId?: string; dateBasis?: string; summary?: string; title: string; publisher: string; publishedAt: string; url: string; relevance: string }
 type PeriodAnalysis = { granularity: string; fallback: boolean; sampleCount: number; coverageStart: string | null; coverageEnd: string | null; lowest: number | null; median: number | null; latestPeriodLowest: number | null; periodChangePercent: number | null; canCompareCurrent: boolean; gapFromLowPercent: number | null; priceBasis: string; limitation: string }
@@ -72,10 +74,11 @@ function ChatSession({ productId, title }: { productId: string; title: string })
   const [error, setError] = useState('')
   const active = useRef<AbortController | null>(null)
   const lock = useRef(false)
-  const bottom = useRef<HTMLDivElement | null>(null)
+  const conversation = useRef<HTMLDivElement | null>(null)
   useEffect(() => () => active.current?.abort(), [])
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: 'nearest' })
+    const log = conversation.current
+    if (log) log.scrollTop = log.scrollHeight
   }, [messages, busy])
   async function send(question = input) {
     const text = question.trim(); if (!text || text.length > 1000 || lock.current) return
@@ -91,16 +94,21 @@ function ChatSession({ productId, title }: { productId: string; title: string })
   }
   function submit(event: FormEvent) { event.preventDefault(); void send() }
   return <>
-    <div role="log" aria-label="선택 상품 구매 상담" aria-live="polite" className="chat-scroll h-[400px] sm:h-[480px] space-y-4 overflow-y-auto overscroll-contain p-5">
+    <div ref={conversation} role="log" aria-label="선택 상품 구매 상담" aria-live="polite" className="chat-scroll h-[400px] sm:h-[480px] space-y-4 overflow-y-auto overscroll-contain p-5">
       <div className="rounded-2xl bg-[var(--surface-2)] p-4 text-xs leading-6"><p className="font-black">{title}</p><p className="mt-2 text-[var(--muted)]">이 상품의 가격 흐름, 구매 시점, 사양과 판매처를 질문해 주세요. 실제 근거가 부족하면 판단을 보류합니다.</p></div>
       {messages.map((message, index) => <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[95%] rounded-2xl px-4 py-3 text-xs leading-6 ${message.role === 'user' ? 'rounded-br-md bg-[var(--primary)] text-white' : 'w-full rounded-bl-md bg-[var(--surface-2)]'}`}>{message.answer ? <Reply answer={message.answer}/> : message.text}</div></div>)}
       {busy && <Loading showLabel label="잠시만 기다려주세요. 답변을 생성하는 중입니다."/>}
-      {error && <p role="alert" className="text-xs text-rose-500">{error}</p>}<div ref={bottom}/>
+      {error && <p role="alert" className="text-xs text-rose-500">{error}</p>}
     </div>
     <div className="border-t border-[var(--line)] p-4"><div className="mb-3 flex gap-2 overflow-x-auto">{['지금 구매해도 될까요?', '가격 흐름은 어떤가요?', '관련 뉴스가 있나요?', '사양을 알려줘'].map(text => <button key={text} type="button" disabled={busy} onClick={() => void send(text)} className="shrink-0 rounded-full border border-[var(--line)] px-3 py-1.5 text-[10px] font-bold text-[var(--muted)] disabled:opacity-40">{text}</button>)}</div><label className="mb-3 flex items-center justify-between gap-3 text-xs">구매 시급성<select aria-label="구매 시급성" value={urgency} disabled={busy} onChange={event=>setUrgency(event.target.value)} className="rounded-lg bg-[var(--surface-2)] p-2"><option value="URGENT">급해요</option><option value="NORMAL">보통</option><option value="FLEXIBLE">여유 있어요</option></select></label><form onSubmit={submit} className="flex items-center gap-2 rounded-2xl bg-[var(--surface-2)] p-2"><input aria-label="선택 상품 구매 질문" value={input} maxLength={1000} disabled={busy} onChange={event => setInput(event.target.value)} placeholder="가격이나 구매 시점을 물어보세요" className="min-w-0 flex-1 bg-transparent px-2 text-xs outline-none"/><button disabled={busy || !input.trim()} aria-label="메시지 보내기" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--primary)] text-white disabled:opacity-40"><Icon name="send" size={15}/></button></form><p className="mt-2 text-center text-[9px] text-[var(--subtle)]">가격 기준 시각과 판매 조건을 함께 확인해 주세요.</p></div>
   </>
 }
 export default function PriceAgentChat({ productId, title, onLogin }: { productId: string; title: string; onLogin: () => void }) {
   const { user, ready } = useSession()
-  return <article className="overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]"><div className="ai-header flex items-center justify-between gap-3 p-5 text-white"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl border border-white bg-white"><img src={`${import.meta.env.BASE_URL}brand/ai-assistant-joopjoop.png`} alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0 object-contain -scale-x-100"/></span><div><h2 className="text-sm font-black">줍줍각 AI 구매 비서</h2><p className="mt-1 text-[10px] text-white/65">실제 가격 근거로 살펴보는 구매 타이밍</p></div></div><span className="rounded-full border border-white/15 px-2 py-1 text-[9px] font-bold">BETA</span></div>{ready && user ? <ChatSession key={`${user.uid}:${productId}`} productId={productId} title={title}/> : <div className="p-6 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--mint-soft)] text-[var(--mint)]"><Icon name="user" size={23}/></span><p className="mt-4 text-sm font-black">로그인하고 AI 구매 비서와 대화하세요</p><p className="mt-2 text-xs leading-6 text-[var(--muted)]">선택한 상품의 가격과 구매 시점을 상담할 수 있어요.</p><button type="button" disabled={!ready} onClick={onLogin} className="mt-5 w-full rounded-xl bg-[var(--primary)] py-3 text-xs font-bold text-white disabled:opacity-40">로그인하기</button></div>}</article>
+  const { panelOpen, setPanelOpen } = useFloatingAgent()
+  const launcher = useRef<HTMLButtonElement>(null)
+  const closeButton = useRef<HTMLButtonElement>(null)
+  function closePanel() { setPanelOpen(false); document.getElementById('shopping-tools-trigger')?.focus({ preventScroll: true }) }
+  useEffect(() => { if (panelOpen) closeButton.current?.focus({ preventScroll: true }) }, [panelOpen])
+  return <><button ref={launcher} type="button" className="price-agent-launcher" aria-expanded={panelOpen} onClick={() => setPanelOpen(!panelOpen)}>AI 구매 비서</button><article className={`price-agent-panel ${panelOpen ? 'is-open' : ''} overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]`} aria-label="AI 구매 비서" onKeyDown={event => { if (event.key === 'Escape' && panelOpen) { event.stopPropagation(); closePanel() } }}><button ref={closeButton} type="button" className="price-agent-close" onClick={closePanel}>상담창 닫기</button><div className="ai-header flex items-center justify-between gap-3 p-5 text-white"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl border border-white bg-white"><img src={`${import.meta.env.BASE_URL}brand/ai-assistant-joopjoop.png`} alt="" aria-hidden="true" width={36} height={36} className="h-9 w-9 shrink-0 object-contain -scale-x-100"/></span><div><h2 className="text-sm font-black">줍줍각 AI 구매 비서</h2><p className="mt-1 text-[10px] text-white/65">실제 가격 근거로 살펴보는 구매 타이밍</p></div></div><span className="rounded-full border border-white/15 px-2 py-1 text-[9px] font-bold">BETA</span></div>{ready && user ? <ChatSession key={`${user.uid}:${productId}`} productId={productId} title={title}/> : <div className="p-6 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[var(--mint-soft)] text-[var(--mint)]"><Icon name="user" size={23}/></span><p className="mt-4 text-sm font-black">로그인하고 AI 구매 비서와 대화하세요</p><p className="mt-2 text-xs leading-6 text-[var(--muted)]">선택한 상품의 가격과 구매 시점을 상담할 수 있어요.</p><button type="button" disabled={!ready} onClick={onLogin} className="mt-5 w-full rounded-xl bg-[var(--primary)] py-3 text-xs font-bold text-white disabled:opacity-40">로그인하기</button></div>}</article></>
 }
